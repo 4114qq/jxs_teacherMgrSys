@@ -1,9 +1,11 @@
-#ifndef BASECOREPLUGIN_H
+﻿#ifndef BASECOREPLUGIN_H
 #define BASECOREPLUGIN_H
 
 #include "BaseCorePlugin_global.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "EventManager.h"
+#include "DatabaseManager.h"
+#include "ConfigManager.h"
 
 /**
  * @brief 基础核心插件
@@ -19,13 +21,12 @@ public:
     explicit BaseCorePlugin(QObject *parent = nullptr);
     ~BaseCorePlugin() override;
 
-    // 基本信息接口
     QString name() const override;
     QString version() const override;
     QString description() const override;
     QString author() const override;
 
-    // 生命周期管理
+
     bool initialize() override;
     bool startPlugin() override;
     bool stopPlugin() override;
@@ -40,12 +41,20 @@ public:
     // 事件管理
     IBaseEventBus *eventManager() const override;
 
+    // 数据库管理
+    IDatabaseManager *databaseManager() const;
+
+    // 配置管理
+    IConfigManager *configManager() const;
+
     // 依赖管理
     QStringList dependencies() const override;
 
 private:
     QMap<QString, QVariant> m_config;
     IBaseEventBus *m_eventManager;
+    mutable DatabaseManager *m_databaseManager;
+    mutable ConfigManager *m_configManager;
 };
 
 #endif // BASECOREPLUGIN_H

@@ -2,7 +2,9 @@
 
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
-    m_eventManager(new CoreEventBus)
+    m_eventManager(new CoreEventBus()),
+    m_databaseManager(new DatabaseManager(this)),
+    m_configManager(new ConfigManager(this))
 {
 }
 
@@ -49,6 +51,9 @@ bool BaseCorePlugin::stopPlugin()
 
 void BaseCorePlugin::cleanup()
 {
+    if (m_databaseManager) {
+        m_databaseManager->disconnect();
+    }
     saveConfig();
 }
 
@@ -84,6 +89,15 @@ IBaseEventBus *BaseCorePlugin::eventManager() const
 
 QStringList BaseCorePlugin::dependencies() const
 {
-    // 基础插件没有依赖
     return QStringList();
+}
+
+IDatabaseManager *BaseCorePlugin::databaseManager() const
+{
+    return m_databaseManager;
+}
+
+IConfigManager *BaseCorePlugin::configManager() const
+{
+    return m_configManager;
 }
