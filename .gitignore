@@ -1,0 +1,33 @@
+# Qt build files
+build/
+
+# Qt Creator files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Debug files
+*.pdb
+*.dSYM/
+
+# Release files
+*.exe
+*.dll
+*.so
+*.dylib
