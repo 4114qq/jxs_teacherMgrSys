@@ -1,0 +1,16 @@
+{
+    "Enable_Auto_Connect": true,
+    "Enable_Auto_Connect_note": "是否自动连接",
+    "Local_IP_PLC": "10.1.5.160",
+    "Local_IP_PLC_note": "电环路PLC发送到本地的IP",
+    "Local_Port_PLC": 6000,
+    "Local_Port_PLC_note": "电环路PLC发送到本地的端口",
+    "Log_Level": "info",
+    "Log_Level_note": "日志级别(debug/info/warning/error)",
+    "Max_Reconnect_Attempts": 5,
+    "Max_Reconnect_Attempts_note": "最大重连次数",
+    "Server_IP": "192.168.1.100",
+    "Server_IP_note": "服务器IP地址",
+    "Server_Port": 8080,
+    "Server_Port_note": "服务器端口号"
+}

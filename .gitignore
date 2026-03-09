@@ -36,5 +36,8 @@ bin/x86_64/App.exe
 .DS_Store
 Thumbs.db
 
-# Config files with sensitive data
-# bin/x86_64/configs/*.json
+# Config files
+!bin/x86_64/configs/
+bin/x86_64/configs/*.json
+!bin/x86_64/configs/config.json
+!bin/x86_64/configs/priority.json
