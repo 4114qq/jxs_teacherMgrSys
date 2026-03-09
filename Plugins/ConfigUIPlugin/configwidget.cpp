@@ -3,11 +3,14 @@
 #include "../../common/interfaces/IConfigManager.h"
 #include <QMessageBox>
 #include <QPushButton>
+#include <QInputDialog>
+#include <QHeaderView>
 
 ConfigWidget::ConfigWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ConfigWidget)
     , m_configManager(nullptr)
+    , m_isEditing(false)
 {
     ui->setupUi(this);
     initUI();
@@ -28,15 +31,17 @@ void ConfigWidget::setConfigManager(IConfigManager *configManager)
 
 void ConfigWidget::initUI()
 {
-    // 初始化界面组件
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ConfigWidget::onSaveConfig);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &ConfigWidget::close);
-    
-    // 重置按钮
-    QPushButton *resetButton = ui->buttonBox->button(QDialogButtonBox::Reset);
-    if (resetButton) {
-        connect(resetButton, &QPushButton::clicked, this, &ConfigWidget::onResetConfig);
-    }
+    ui->tableWidget->setColumnCount(3);
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << QString::fromLocal8Bit("Key") << QString::fromLocal8Bit("Value") << QString::fromLocal8Bit("Description"));
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
+    ui->tableWidget->setEditTriggers(QAbstractItemView::AllEditTriggers);
+    ui->tableWidget->setAlternatingRowColors(true);
+
+    connect(ui->btnAdd, &QPushButton::clicked, this, &ConfigWidget::onAddConfig);
+    connect(ui->btnEdit, &QPushButton::clicked, this, &ConfigWidget::onEditConfig);
+    connect(ui->btnDelete, &QPushButton::clicked, this, &ConfigWidget::onDeleteConfig);
+    connect(ui->btnReload, &QPushButton::clicked, this, &ConfigWidget::onReloadConfig);
+    connect(ui->tableWidget, &QTableWidget::itemChanged, this, &ConfigWidget::onTableItemChanged);
 }
 
 void ConfigWidget::loadConfigToUI()
@@ -45,27 +50,31 @@ void ConfigWidget::loadConfigToUI()
         return;
     }
 
-    // 加载通用配置
-    QString language = m_configManager->get("general/language", "中文").toString();
-    QString theme = m_configManager->get("general/theme", "默认").toString();
-    bool autoSave = m_configManager->get("general/autoSave", false).toBool();
+    ui->tableWidget->blockSignals(true);
+    ui->tableWidget->setRowCount(0);
 
-    ui->comboBoxLanguage->setCurrentText(language);
-    ui->comboBoxTheme->setCurrentText(theme);
-    ui->checkBoxAutoSave->setChecked(autoSave);
+    QList<ConfigItem> items = m_configManager->getConfigItems();
+    for (const ConfigItem &item : items) {
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
 
-    // 加载数据库配置
-    QString host = m_configManager->get("database/host", "localhost").toString();
-    int port = m_configManager->get("database/port", 3306).toInt();
-    QString database = m_configManager->get("database/name", "teacher_mgr").toString();
-    QString username = m_configManager->get("database/username", "root").toString();
-    QString password = m_configManager->get("database/password", "").toString();
+        QTableWidgetItem *keyItem = new QTableWidgetItem(item.key);
+        keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
+        ui->tableWidget->setItem(row, 0, keyItem);
 
-    ui->lineEditHost->setText(host);
-    ui->lineEditPort->setText(QString::number(port));
-    ui->lineEditDatabase->setText(database);
-    ui->lineEditUsername->setText(username);
-    ui->lineEditPassword->setText(password);
+        QString valueStr;
+        if (item.type == "bool") {
+            valueStr = item.value.toBool() ? "true" : "false";
+        } else if (item.type == "int" || item.type == "double") {
+            valueStr = item.value.toString();
+        } else {
+            valueStr = item.value.toString();
+        }
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(valueStr));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(item.description));
+    }
+
+    ui->tableWidget->blockSignals(false);
 }
 
 void ConfigWidget::saveUIToConfig()
@@ -74,69 +83,169 @@ void ConfigWidget::saveUIToConfig()
         return;
     }
 
-    // 保存通用配置
-    m_configManager->set("general/language", ui->comboBoxLanguage->currentText());
-    m_configManager->set("general/theme", ui->comboBoxTheme->currentText());
-    m_configManager->set("general/autoSave", ui->checkBoxAutoSave->isChecked());
+    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
+        ConfigItem item;
+        item.key = ui->tableWidget->item(row, 0)->text();
+        item.description = ui->tableWidget->item(row, 2)->text();
 
-    // 保存数据库配置
-    m_configManager->set("database/host", ui->lineEditHost->text());
-    m_configManager->set("database/port", ui->lineEditPort->text().toInt());
-    m_configManager->set("database/name", ui->lineEditDatabase->text());
-    m_configManager->set("database/username", ui->lineEditUsername->text());
-    m_configManager->set("database/password", ui->lineEditPassword->text());
+        QString valueStr = ui->tableWidget->item(row, 1)->text();
+
+        if (valueStr.toLower() == "true" || valueStr.toLower() == "false") {
+            item.value = (valueStr.toLower() == "true");
+            item.type = "bool";
+        } else {
+            bool ok;
+            int intValue = valueStr.toInt(&ok);
+            if (ok) {
+                item.value = intValue;
+                item.type = "int";
+            } else {
+                double doubleValue = valueStr.toDouble(&ok);
+                if (ok) {
+                    item.value = doubleValue;
+                    item.type = "double";
+                } else {
+                    item.value = valueStr;
+                    item.type = "string";
+                }
+            }
+        }
+
+        m_configManager->updateConfigItem(item);
+    }
 }
 
 void ConfigWidget::onSaveConfig()
 {
     if (!m_configManager) {
-        QMessageBox::warning(this, "警告", "配置管理器未初始化");
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
         return;
     }
 
     saveUIToConfig();
     if (m_configManager->save()) {
-        QMessageBox::information(this, "成功", "配置保存成功");
+        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置保存成功"));
     } else {
-        QMessageBox::critical(this, "错误", "配置保存失败");
+        QMessageBox::critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置保存失败"));
     }
 }
 
-void ConfigWidget::onLoadConfig()
+void ConfigWidget::onAddConfig()
 {
     if (!m_configManager) {
-        QMessageBox::warning(this, "警告", "配置管理器未初始化");
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
         return;
     }
 
-    if (m_configManager->load()) {
-        loadConfigToUI();
-        QMessageBox::information(this, "成功", "配置加载成功");
+    bool ok;
+    QString key = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Key:"), QLineEdit::Normal, "", &ok);
+    if (!ok || key.isEmpty()) {
+        return;
+    }
+
+    if (m_configManager->contains(key)) {
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Key 已存在"));
+        return;
+    }
+
+    QString value = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Value:"), QLineEdit::Normal, "", &ok);
+    if (!ok) {
+        return;
+    }
+
+    QString description = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Description (描述):"), QLineEdit::Normal, "", &ok);
+    if (!ok) {
+        return;
+    }
+
+    ConfigItem item;
+    item.key = key;
+    item.description = description;
+
+    if (value.toLower() == "true" || value.toLower() == "false") {
+        item.value = (value.toLower() == "true");
+        item.type = "bool";
     } else {
-        QMessageBox::critical(this, "错误", "配置加载失败");
+        bool isInt;
+        int intValue = value.toInt(&isInt);
+        if (isInt) {
+            item.value = intValue;
+            item.type = "int";
+        } else {
+            bool isDouble;
+            double doubleValue = value.toDouble(&isDouble);
+            if (isDouble) {
+                item.value = doubleValue;
+                item.type = "double";
+            } else {
+                item.value = value;
+                item.type = "string";
+            }
+        }
+    }
+
+    m_configManager->addConfigItem(item);
+    loadConfigToUI();
+}
+
+void ConfigWidget::onEditConfig()
+{
+    int currentRow = ui->tableWidget->currentRow();
+    if (currentRow < 0) {
+        QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请选择要编辑的行"));
+        return;
+    }
+
+    ui->tableWidget->editItem(ui->tableWidget->item(currentRow, 1));
+}
+
+void ConfigWidget::onDeleteConfig()
+{
+    int currentRow = ui->tableWidget->currentRow();
+    if (currentRow < 0) {
+        QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请选择要删除的行"));
+        return;
+    }
+
+    QString key = ui->tableWidget->item(currentRow, 0)->text();
+    if (QMessageBox::question(this, QString::fromLocal8Bit("确认"), QString::fromLocal8Bit("确定要删除配置项 [%1] 吗？").arg(key)) == QMessageBox::Yes) {
+        m_configManager->deleteConfigItem(key);
+        loadConfigToUI();
     }
 }
 
-void ConfigWidget::onResetConfig()
+void ConfigWidget::onReloadConfig()
 {
     if (!m_configManager) {
-        QMessageBox::warning(this, "警告", "配置管理器未初始化");
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
         return;
     }
 
-    if (QMessageBox::question(this, "确认", "确定要重置配置吗？") == QMessageBox::Yes) {
-        // 重置为默认值
-        m_configManager->set("general/language", "中文");
-        m_configManager->set("general/theme", "默认");
-        m_configManager->set("general/autoSave", false);
-        m_configManager->set("database/host", "localhost");
-        m_configManager->set("database/port", 3306);
-        m_configManager->set("database/name", "teacher_mgr");
-        m_configManager->set("database/username", "root");
-        m_configManager->set("database/password", "");
-        
-        m_configManager->save();
+    if (m_configManager->reload()) {
         loadConfigToUI();
-        QMessageBox::information(this, "成功", "配置已重置为默认值");
+        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置重新加载成功"));
+    } else {
+        QMessageBox::critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置重新加载失败"));
     }
+}
+
+void ConfigWidget::onTableItemChanged(QTableWidgetItem *item)
+{
+    if (!m_configManager || m_isEditing) {
+        return;
+    }
+
+    int row = item->row();
+    QString key = ui->tableWidget->item(row, 0)->text();
+    QString value = item->text();
+    QString description = ui->tableWidget->item(row, 2)->text();
+    QString type = ui->tableWidget->item(row, 3)->text();
+
+    ConfigItem configItem;
+    configItem.key = key;
+    configItem.value = value;
+    configItem.description = description;
+    configItem.type = type;
+
+    m_configManager->updateConfigItem(configItem);
 }

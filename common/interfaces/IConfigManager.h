@@ -5,7 +5,15 @@
 #include <QString>
 #include <QVariant>
 #include <QVariantMap>
+#include <QList>
 #include <functional>
+
+struct ConfigItem {
+    QString key;
+    QVariant value;
+    QString description;
+    QString type;
+};
 
 class IConfigManager
 {
@@ -38,6 +46,11 @@ public:
 
     virtual QStringList allKeys() const = 0;
     virtual QString getConfigFilePath() const = 0;
+
+    virtual QList<ConfigItem> getConfigItems() const = 0;
+    virtual void addConfigItem(const ConfigItem &item) = 0;
+    virtual void updateConfigItem(const ConfigItem &item) = 0;
+    virtual void deleteConfigItem(const QString &key) = 0;
 };
 
 #define ICONFIGMANAGER_IID "com.jxs.teacherMgrSys.IConfigManager"

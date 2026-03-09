@@ -1,10 +1,14 @@
-#include "basecoreplugin.h"
+﻿#include "basecoreplugin.h"
+#include "../../common/interfaces/IBasePlugin.h"
+#include "../../common/interfaces/IPluginWidget.h"
+#include <QWidget>
 
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
     m_eventManager(new CoreEventBus()),
     m_databaseManager(new DatabaseManager(this)),
-    m_configManager(new ConfigManager(this))
+    m_configManager(new ConfigManager(this)),
+    m_pluginWidget(nullptr)
 {
 }
 
@@ -35,6 +39,9 @@ QString BaseCorePlugin::author() const
 
 bool BaseCorePlugin::initialize()
 {
+    if (m_configManager) {
+        m_configManager->load();
+    }
     loadConfig();
     return true;
 }
@@ -79,6 +86,9 @@ bool BaseCorePlugin::loadConfig()
 
 bool BaseCorePlugin::saveConfig()
 {
+    if (m_configManager) {
+        m_configManager->save();
+    }
     return true;
 }
 
@@ -102,7 +112,7 @@ IConfigManager *BaseCorePlugin::configManager() const
     return m_configManager;
 }
 
-QWidget *BaseCorePlugin::mainWidget() const
+IPluginWidget *BaseCorePlugin::pluginWidget() const
 {
-    return nullptr; // BaseCorePlugin 不提供主窗口
+    return nullptr; // BaseCorePlugin 不提供界面
 }

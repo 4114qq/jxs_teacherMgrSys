@@ -1,9 +1,10 @@
 ﻿#ifndef IBASEPLUGIN_H
 #define IBASEPLUGIN_H
 
-#include "interfaces/IBaseEventBus.h"
-#include "interfaces/IDatabaseManager.h"
-#include "interfaces/IConfigManager.h"
+#include "IBaseEventBus.h"
+#include "IDatabaseManager.h"
+#include "IConfigManager.h"
+#include "IPluginWidget.h"
 #include <QObject>
 #include <QString>
 #include <QVariant>
@@ -46,7 +47,7 @@ public:
     virtual QStringList dependencies() const = 0; // 插件依赖
     
     // 界面管理
-    virtual QWidget *mainWidget() const = 0; // 插件主窗口
+    virtual IPluginWidget *pluginWidget() const = 0;
 };
 
 // 插件接口标识

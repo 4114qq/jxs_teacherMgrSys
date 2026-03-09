@@ -1,33 +1,40 @@
 # Qt build files
-build/
-
-# Qt Creator files
 *.pro.user
 *.pro.user.*
-*.qbs.user
-*.qbs.user.*
+*.autosave
+Makefile
+Makefile.*
+*.o
+*.obj
+*.exe
+*.dll
+*.ilk
+*.exp
+*.lib
+*.pdb
+*.idb
+*.pch
+*.obj
 
-# IDE files
-.idea/
-.vscode/
+# Qt Creator
+*.creator
+*.files
+*.includes
+
+# Build directories
+build/
+Build/
+debug/
+release/
+bin/x86_64/App.exe
+
+# Stash files
+.qmake.stash
+*.stash
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Log files
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-
-# Debug files
-*.pdb
-*.dSYM/
-
-# Release files
-*.exe
-*.dll
-*.so
-*.dylib
+# Config files with sensitive data
+# bin/x86_64/configs/*.json

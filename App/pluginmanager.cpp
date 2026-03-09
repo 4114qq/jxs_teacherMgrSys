@@ -1,4 +1,5 @@
 ﻿#include "pluginmanager.h"
+#include "../common/interfaces/IConfigManager.h"
 #include <QDir>
 #include <QDebug>
 #include <QVariantMap>
@@ -114,18 +115,25 @@ bool PluginManager::loadPlugin(const QString &pluginPath)
         return false;
     }
 
-    QString pluginName = plugin->name();
-    m_mapPluginLoaders[pluginName] = loader;
-    m_plugins[pluginName] = plugin;
+    QString name = plugin->name();
+    m_mapPluginLoaders[name] = loader;
+    m_plugins[name] = plugin;
 
-    // 检查插件是否提供主窗口
-    QWidget *widget = plugin->mainWidget();
-    if (widget) {
-        emit pluginWidgetReady(pluginName, widget);
+    IPluginWidget *widget = plugin->pluginWidget();
+    if (widget && widget->widget()) {
+        emit pluginWidgetReady(name, widget->widget());
     }
 
-    qInfo() << "Plugin loaded successfully:" << pluginName;
-    emit pluginLoaded(pluginName);
+    qInfo() << "Plugin loaded successfully:" << name;
+    emit pluginLoaded(name);
+
+    if (name == "BaseCorePlugin") {
+        IConfigManager *configMgr = plugin->configManager();
+        if (configMgr) {
+            emit configManagerReady(configMgr);
+        }
+    }
+
     return true;
 }
 
@@ -249,54 +257,44 @@ void PluginManager::setDefaultPriority(const QString &pluginName, int priority)
 QStringList PluginManager::topologicalSort(const QMap<QString, QStringList> &dependencies)
 {
     QStringList result;
-    QMap<QString, int> inDegree;
-    QMap<QString, QStringList> adjList = dependencies;
-
-    // 初始化入度
-    for (auto it = adjList.constBegin(); it != adjList.constEnd(); ++it) {
-        inDegree[it.key()] = 0;
+    QMap<QString, int> degree;
+    QMap<QString, QStringList> adj = dependencies;
+    QList<QString> keys = adj.keys();
+    for (int i = 0; i < keys.size(); i++) {
+        degree[keys.at(i)] = 0;
     }
-    for (const QStringList &deps : adjList.values()) {
-        for (const QString &dep : deps) {
-            inDegree[dep] = inDegree.value(dep, 0);
+    QList<QString> allDeps;
+    for (int i = 0; i < keys.size(); i++) {
+        QStringList d = adj.value(keys.at(i));
+        for (int j = 0; j < d.size(); j++) {
+            if (!allDeps.contains(d.at(j))) {
+                allDeps.append(d.at(j));
+            }
+            degree[d.at(j)] = degree.value(d.at(j), 0) + 1;
         }
     }
-
-    // 计算入度
-    for (const QStringList &deps : adjList.values()) {
-        for (const QString &dep : deps) {
-            inDegree[dep]++;
+    QList<QString> q;
+    QList<QString> k = degree.keys();
+    for (int i = 0; i < k.size(); i++) {
+        if (degree.value(k.at(i)) == 0) {
+            q.append(k.at(i));
         }
     }
-
-    // 拓扑排序
-    QList<QString> queue;
-    for (auto it = inDegree.constBegin(); it != inDegree.constEnd(); ++it) {
-        if (it.value() == 0) {
-            queue << it.key();
-        }
-    }
-
-    while (!queue.isEmpty()) {
-        QString current = queue.takeFirst();
-        result << current;
-
-        if (adjList.contains(current)) {
-            for (const QString &neighbor : adjList[current]) {
-                inDegree[neighbor]--;
-                if (inDegree[neighbor] == 0) {
-                    queue << neighbor;
-                }
+    while (!q.isEmpty()) {
+        QString cur = q.takeAt(0);
+        result.append(cur);
+        QStringList d = adj.value(cur);
+        for (int i = 0; i < d.size(); i++) {
+            QString neighbor = d.at(i);
+            degree[neighbor] = degree.value(neighbor) - 1;
+            if (degree.value(neighbor) == 0) {
+                q.append(neighbor);
             }
         }
     }
-
-    // 检查是否有循环依赖
-    if (result.size() != inDegree.size()) {
+    if (result.size() != degree.size()) {
         qWarning() << "Circular dependencies detected!";
-        // 返回部分结果，至少保证部分插件能加载
     }
-
     return result;
 }
 

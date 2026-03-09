@@ -2,6 +2,7 @@
 #define CONFIGUIPLUGIN_H
 
 #include "../../common/interfaces/IBasePlugin.h"
+#include "../../common/interfaces/IPluginWidget.h"
 
 class ConfigWidget;
 
@@ -9,11 +10,11 @@ class ConfigWidget;
  * @brief 配置管理界面插件
  * 提供配置管理的用户界面
  */
-class ConfigUIPlugin : public QObject, public IBasePlugin
+class ConfigUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "com.example.ConfigUIPlugin" FILE "configuiplugin.json")
-    Q_INTERFACES(IBasePlugin)
+    Q_INTERFACES(IBasePlugin IPluginWidget)
 
 public:
     ConfigUIPlugin(QObject *parent = nullptr);
@@ -30,7 +31,6 @@ public:
     IBaseEventBus *eventManager() const override;
     IDatabaseManager *databaseManager() const override;
     IConfigManager *configManager() const override;
-    QWidget *mainWidget() const override;
     QStringList dependencies() const override;
     QString author() const override;
     QVariant getConfig(const QString &key, const QVariant &defaultValue) const override;
@@ -38,12 +38,21 @@ public:
     bool loadConfig() override;
     bool saveConfig() override;
 
+    // IPluginWidget interface
+    QWidget *widget() const override;
+    QString widgetTitle() const override;
+    QIcon widgetIcon() const override;
+    IPluginWidget *pluginWidget() const override;
+
+    void setConfigManager(IConfigManager *configManager);
+
+    void setEventManager(IBaseEventBus *eventManager);
+
 private:
     ConfigWidget *m_configWidget;
     IBaseEventBus *m_eventManager;
     IDatabaseManager *m_databaseManager;
     IConfigManager *m_configManager;
-
 
 };
 

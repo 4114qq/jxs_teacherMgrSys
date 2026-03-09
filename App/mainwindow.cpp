@@ -3,6 +3,9 @@
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QDir>
+#include "../../Plugins/ConfigUIPlugin/configuiplugin.h"
+#include "../../common/interfaces/IBasePlugin.h"
+#include "../../common/interfaces/IConfigManager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -28,6 +31,7 @@ void MainWindow::initPluginManager()
     
     // 连接信号
     connect(m_pluginManager, &PluginManager::pluginWidgetReady, this, &MainWindow::onPluginWidgetReady);
+    connect(m_pluginManager, &PluginManager::configManagerReady, this, &MainWindow::onConfigManagerReady);
     
     // 确定基础目录
     QString baseDir = QCoreApplication::applicationDirPath();
@@ -39,7 +43,7 @@ void MainWindow::initPluginManager()
     }
     
     // 加载优先级配置
-    QString priorityFile = baseDir + "/plugins/priority.json";
+    QString priorityFile = baseDir + "/configs/priority.json";
     m_pluginManager->setPriorityFile(priorityFile);
     
     // 加载插件
@@ -68,7 +72,35 @@ void MainWindow::onPluginWidgetReady(const QString &pluginName, QWidget *widget)
     
     // 将插件窗口添加到 tabWidget
     tabWidget->addTab(widget, pluginName);
+
+    // 如果是 ConfigUIPlugin，传递 configManager
+    if (pluginName == "ConfigUIPlugin") {
+        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
+        IBasePlugin *configUI = m_pluginManager->getPlugin("ConfigUIPlugin");
+        if (baseCore && configUI) {
+            IConfigManager *configMgr = baseCore->configManager();
+            if (configMgr) {
+                QVariant var;
+                var.setValue(static_cast<void*>(configMgr));
+                configUI->setConfig("configManagerPtr", var);
+            }
+        }
+    }
     
     // 调整窗口大小
     resize(800, 600);
+}
+
+void MainWindow::onConfigManagerReady(IConfigManager *configManager)
+{
+    if (!configManager) {
+        return;
+    }
+
+    IBasePlugin *configUI = m_pluginManager->getPlugin("ConfigUIPlugin");
+    if (configUI) {
+        QVariant var;
+        var.setValue(static_cast<void*>(configManager));
+        configUI->setConfig("configManagerPtr", var);
+    }
 }

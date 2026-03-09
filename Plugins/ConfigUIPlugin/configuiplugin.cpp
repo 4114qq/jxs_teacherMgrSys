@@ -1,12 +1,12 @@
 #include "configuiplugin.h"
 #include "configwidget.h"
-#include <QIcon>
+#include "../../common/interfaces/IBasePlugin.h"
+#include "../../common/interfaces/IConfigManager.h"
 
 ConfigUIPlugin::ConfigUIPlugin(QObject *parent)
     : QObject(parent)
     , m_configWidget(nullptr)
     , m_eventManager(nullptr)
-    , m_databaseManager(nullptr)
     , m_configManager(nullptr)
 {
 }
@@ -46,7 +46,12 @@ QVariant ConfigUIPlugin::getConfig(const QString &key, const QVariant &defaultVa
 
 void ConfigUIPlugin::setConfig(const QString &key, const QVariant &value)
 {
-    if (m_configManager) {
+    if (key == "configManagerPtr") {
+        m_configManager = static_cast<IConfigManager*>(value.value<void*>());
+        if (m_configWidget && m_configManager) {
+            m_configWidget->setConfigManager(m_configManager);
+        }
+    } else if (m_configManager) {
         m_configManager->set(key, value);
     }
 }
@@ -74,6 +79,14 @@ bool ConfigUIPlugin::initialize()
     return true;
 }
 
+void ConfigUIPlugin::setConfigManager(IConfigManager *configManager)
+{
+    m_configManager = configManager;
+    if (m_configWidget) {
+        m_configWidget->setConfigManager(m_configManager);
+    }
+}
+
 bool ConfigUIPlugin::startPlugin()
 {
     return true;
@@ -92,6 +105,11 @@ void ConfigUIPlugin::cleanup()
     }
 }
 
+void ConfigUIPlugin::setEventManager(IBaseEventBus *eventManager)
+{
+    m_eventManager = eventManager;
+}
+
 IBaseEventBus *ConfigUIPlugin::eventManager() const
 {
     return m_eventManager;
@@ -107,9 +125,24 @@ IConfigManager *ConfigUIPlugin::configManager() const
     return m_configManager;
 }
 
-QWidget *ConfigUIPlugin::mainWidget() const
+QWidget *ConfigUIPlugin::widget() const
 {
     return m_configWidget;
+}
+
+QString ConfigUIPlugin::widgetTitle() const
+{
+    return "配置管理";
+}
+
+QIcon ConfigUIPlugin::widgetIcon() const
+{
+    return QIcon();
+}
+
+IPluginWidget *ConfigUIPlugin::pluginWidget() const
+{
+    return const_cast<ConfigUIPlugin*>(this);
 }
 
 QStringList ConfigUIPlugin::dependencies() const

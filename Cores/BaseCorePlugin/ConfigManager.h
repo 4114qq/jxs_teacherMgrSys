@@ -50,6 +50,11 @@ public:
     void setConfigFileName(const QString &fileName);
     QString configFileName() const;
 
+    QList<ConfigItem> getConfigItems() const override;
+    void addConfigItem(const ConfigItem &item) override;
+    void updateConfigItem(const ConfigItem &item) override;
+    void deleteConfigItem(const QString &key) override;
+
 signals:
     void configChanged(const QString &key, const QVariant &value);
     void configReloaded();
@@ -62,7 +67,7 @@ private:
     static QVariantMap variantMapFromJsonObject(const QJsonObject &obj);
 
 private:
-    QVariantMap m_data;
+    QList<ConfigItem> m_configItems;
     mutable QString m_configPath;
     QString m_fileName;
     QStringList m_groupStack;

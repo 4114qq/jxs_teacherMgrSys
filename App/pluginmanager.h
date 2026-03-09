@@ -5,7 +5,9 @@
 #include <QStringList>
 #include <QMap>
 #include <QPluginLoader>
+#include <QWidget>
 #include "../common/interfaces/IBasePlugin.h"
+#include "../common/interfaces/IConfigManager.h"
 
 /**
  * @brief 插件管理器
@@ -45,8 +47,8 @@ signals:
     void pluginError(const QString &pluginName, const QString &error);
     // 插件窗口信号
     void pluginWidgetReady(const QString &pluginName, QWidget *widget);
-
-
+    // ConfigManager 传递信号
+    void configManagerReady(IConfigManager *configManager);
 
 private:
     QMap<QString, QPluginLoader *> m_mapPluginLoaders;

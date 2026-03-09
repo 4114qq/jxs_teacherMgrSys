@@ -1,4 +1,4 @@
-﻿#ifndef BASECOREPLUGIN_H
+#ifndef BASECOREPLUGIN_H
 #define BASECOREPLUGIN_H
 
 #include "BaseCorePlugin_global.h"
@@ -41,19 +41,23 @@ public:
     // 事件管理
     IBaseEventBus *eventManager() const override;
 
-    // 数据库管理
-    IDatabaseManager *databaseManager() const;
+    // database manager
+    IDatabaseManager *databaseManager() const override;
 
     // 配置管理
-    IConfigManager *configManager() const;
+    IConfigManager *configManager() const override;
 
     // 依赖管理
     QStringList dependencies() const override;
 
-    // IBasePlugin interface
-    QWidget *mainWidget() const override;
+    // IPluginWidget interface
+    IPluginWidget *pluginWidget() const override;
 
 private:
+    // 内部类实现 IPluginWidget
+    class PluginWidgetImpl;
+    PluginWidgetImpl *m_pluginWidget;
+
     QMap<QString, QVariant> m_config;
     IBaseEventBus *m_eventManager;
     mutable DatabaseManager *m_databaseManager;

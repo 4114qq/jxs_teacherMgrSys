@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "pluginmanager.h"
+#include "../common/interfaces/IConfigManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,6 +22,7 @@ public:
 private slots:
     // 插件窗口就绪槽
     void onPluginWidgetReady(const QString &pluginName, QWidget *widget);
+    void onConfigManagerReady(IConfigManager *configManager);
 
 private:
     Ui::MainWindow *ui;

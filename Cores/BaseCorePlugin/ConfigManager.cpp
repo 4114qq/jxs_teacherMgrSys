@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
@@ -21,29 +22,21 @@ ConfigManager::~ConfigManager()
     if (m_reloadTimer->isActive()) {
         m_reloadTimer->stop();
     }
-    save();
 }
 
 QString ConfigManager::getDefaultConfigPath() const
 {
-#ifdef Q_OS_WIN
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
-           .filePath(m_fileName);
-#elif defined(Q_OS_LINUX)
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation))
-           .filePath(QString("jxs_teacherMgrSys/%1").arg(m_fileName));
-#else
-    return QCoreApplication::applicationDirPath() + "/" + m_fileName;
-#endif
+    return QCoreApplication::applicationDirPath() + "/configs/" + m_fileName;
 }
 
 QVariant ConfigManager::get(const QString &key, const QVariant &defaultValue) const
 {
     QMutexLocker locker(&m_mutex);
 
-    QString full = fullKey(key);
-    if (m_data.contains(full)) {
-        return m_data[full];
+    for (const auto &item : m_configItems) {
+        if (item.key == key) {
+            return item.value;
+        }
     }
     return defaultValue;
 }
@@ -52,10 +45,14 @@ void ConfigManager::set(const QString &key, const QVariant &value)
 {
     QMutexLocker locker(&m_mutex);
 
-    QString full = fullKey(key);
-    m_data[full] = value;
-    notifyWatchers(full, value);
-    emit configChanged(full, value);
+    for (auto &item : m_configItems) {
+        if (item.key == key) {
+            item.value = value.toString();
+            notifyWatchers(key, value);
+            emit configChanged(key, value);
+            return;
+        }
+    }
 }
 
 void ConfigManager::setMultiple(const QVariantMap &map)
@@ -63,38 +60,56 @@ void ConfigManager::setMultiple(const QVariantMap &map)
     QMutexLocker locker(&m_mutex);
 
     for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
-        QString full = fullKey(it.key());
-        m_data[full] = it.value();
-        notifyWatchers(full, it.value());
-        emit configChanged(full, it.value());
+        for (auto &item : m_configItems) {
+            if (item.key == it.key()) {
+                item.value = it.value().toString();
+                notifyWatchers(it.key(), it.value());
+                emit configChanged(it.key(), it.value());
+                break;
+            }
+        }
     }
 }
 
 QVariantMap ConfigManager::getAll() const
 {
     QMutexLocker locker(&m_mutex);
-    return m_data;
+    QVariantMap map;
+    for (const auto &item : m_configItems) {
+        map[item.key] = item.value;
+    }
+    return map;
 }
 
 bool ConfigManager::contains(const QString &key) const
 {
     QMutexLocker locker(&m_mutex);
-    return m_data.contains(fullKey(key));
+
+    for (const auto &item : m_configItems) {
+        if (item.key == key) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ConfigManager::remove(const QString &key)
 {
     QMutexLocker locker(&m_mutex);
 
-    QString full = fullKey(key);
-    m_data.remove(full);
-    m_watchers.remove(full);
+    for (int i = 0; i < m_configItems.size(); ++i) {
+        if (m_configItems[i].key == key) {
+            m_configItems.removeAt(i);
+            m_watchers.remove(key);
+            return;
+        }
+    }
 }
 
 void ConfigManager::clear()
 {
     QMutexLocker locker(&m_mutex);
-    m_data.clear();
+    m_configItems.clear();
     m_watchers.clear();
 }
 
@@ -133,15 +148,57 @@ bool ConfigManager::load(const QString &filePath)
     }
 
     QJsonObject obj = doc.object();
-    m_data = variantMapFromJsonObject(obj);
+    m_configItems.clear();
 
-    qDebug() << "Config loaded from:" << path;
+    QStringList keys = obj.keys();
+    for (const QString &fullKey : keys) {
+        if (fullKey.endsWith("_note")) {
+            continue;
+        }
+
+        QJsonValue value = obj[fullKey];
+        QString noteKey = fullKey + "_note";
+        QString description = obj.contains(noteKey) ? obj[noteKey].toString() : QString();
+
+        ConfigItem item;
+        item.key = fullKey;
+        item.description = description;
+
+        if (value.isString()) {
+            item.value = value.toString();
+            item.type = "string";
+        } else if (value.isBool()) {
+            item.value = value.toBool();
+            item.type = "bool";
+        } else if (value.isDouble()) {
+            double doubleValue = value.toDouble();
+            if (doubleValue == static_cast<int>(doubleValue)) {
+                item.value = static_cast<int>(doubleValue);
+                item.type = "int";
+            } else {
+                item.value = doubleValue;
+                item.type = "double";
+            }
+        } else {
+            item.value = value.toVariant();
+            item.type = "string";
+        }
+
+        m_configItems.append(item);
+    }
+
+    qDebug() << "Config loaded from:" << path << "with" << m_configItems.size() << "items";
     return true;
 }
 
 bool ConfigManager::save(const QString &filePath)
 {
     QMutexLocker locker(&m_mutex);
+
+    if (m_configItems.isEmpty()) {
+        qDebug() << "No config items to save, skipping save operation";
+        return true;
+    }
 
     QString path = filePath.isEmpty() ? getDefaultConfigPath() : filePath;
     m_configPath = path;
@@ -158,8 +215,26 @@ bool ConfigManager::save(const QString &filePath)
         return false;
     }
 
-    QJsonObject obj = jsonObjectFromVariantMap(m_data);
-    QJsonDocument doc(obj);
+    QJsonObject rootObj;
+    for (const auto &item : m_configItems) {
+        QJsonValue value;
+        if (item.type == "bool") {
+            value = item.value.toBool();
+        } else if (item.type == "int") {
+            value = item.value.toInt();
+        } else if (item.type == "double") {
+            value = item.value.toDouble();
+        } else {
+            value = item.value.toString();
+        }
+        rootObj[item.key] = value;
+
+        if (!item.description.isEmpty()) {
+            rootObj[item.key + "_note"] = item.description;
+        }
+    }
+
+    QJsonDocument doc(rootObj);
     file.write(doc.toJson(QJsonDocument::Indented));
     file.close();
 
@@ -206,13 +281,13 @@ bool ConfigManager::isHotReloadEnabled() const
 void ConfigManager::watch(const QString &key, std::function<void(const QVariant&)> callback)
 {
     QMutexLocker locker(&m_mutex);
-    m_watchers[fullKey(key)] = callback;
+    m_watchers[key] = callback;
 }
 
 void ConfigManager::unwatch(const QString &key)
 {
     QMutexLocker locker(&m_mutex);
-    m_watchers.remove(fullKey(key));
+    m_watchers.remove(key);
 }
 
 void ConfigManager::beginGroup(const QString &group)
@@ -238,7 +313,11 @@ QString ConfigManager::currentGroup() const
 QStringList ConfigManager::allKeys() const
 {
     QMutexLocker locker(&m_mutex);
-    return m_data.keys();
+    QStringList keys;
+    for (const auto &item : m_configItems) {
+        keys.append(item.key);
+    }
+    return keys;
 }
 
 QString ConfigManager::getConfigFilePath() const
@@ -290,4 +369,42 @@ QVariantMap ConfigManager::variantMapFromJsonObject(const QJsonObject &obj)
         map[it.key()] = it.value().toVariant();
     }
     return map;
+}
+
+QList<ConfigItem> ConfigManager::getConfigItems() const
+{
+    QMutexLocker locker(&m_mutex);
+    return m_configItems;
+}
+
+void ConfigManager::addConfigItem(const ConfigItem &item)
+{
+    QMutexLocker locker(&m_mutex);
+    m_configItems.append(item);
+}
+
+void ConfigManager::updateConfigItem(const ConfigItem &item)
+{
+    QMutexLocker locker(&m_mutex);
+
+    for (auto &existingItem : m_configItems) {
+        if (existingItem.key == item.key) {
+            existingItem = item;
+            emit configChanged(item.key, item.value);
+            return;
+        }
+    }
+}
+
+void ConfigManager::deleteConfigItem(const QString &key)
+{
+    QMutexLocker locker(&m_mutex);
+
+    for (int i = 0; i < m_configItems.size(); ++i) {
+        if (m_configItems[i].key == key) {
+            m_configItems.removeAt(i);
+            m_watchers.remove(key);
+            return;
+        }
+    }
 }
