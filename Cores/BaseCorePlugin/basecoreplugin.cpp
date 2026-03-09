@@ -101,3 +101,8 @@ IConfigManager *BaseCorePlugin::configManager() const
 {
     return m_configManager;
 }
+
+QWidget *BaseCorePlugin::mainWidget() const
+{
+    return nullptr; // BaseCorePlugin 不提供主窗口
+}

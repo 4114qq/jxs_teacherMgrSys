@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariant>
+#include <QWidget>
 
 /**
  * @brief 插件接口基类
@@ -43,6 +44,9 @@ public:
 
     // 依赖管理
     virtual QStringList dependencies() const = 0; // 插件依赖
+    
+    // 界面管理
+    virtual QWidget *mainWidget() const = 0; // 插件主窗口
 };
 
 // 插件接口标识

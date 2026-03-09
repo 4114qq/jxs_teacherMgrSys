@@ -50,11 +50,16 @@ public:
     // 依赖管理
     QStringList dependencies() const override;
 
+    // IBasePlugin interface
+    QWidget *mainWidget() const override;
+
 private:
     QMap<QString, QVariant> m_config;
     IBaseEventBus *m_eventManager;
     mutable DatabaseManager *m_databaseManager;
     mutable ConfigManager *m_configManager;
+
+
 };
 
 #endif // BASECOREPLUGIN_H

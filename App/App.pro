@@ -23,7 +23,11 @@ FORMS += \
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
+else: win32: target.path = ../bin/x86_64
 !isEmpty(target.path): INSTALLS += target
 
+# Set output directory
+DESTDIR = $$PWD/../bin/x86_64
+
 # Include common directory
-INCLUDEPATH += ../common
+INCLUDEPATH += $$PWD/../common

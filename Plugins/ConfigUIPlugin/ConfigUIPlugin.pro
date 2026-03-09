@@ -1,9 +1,9 @@
-QT       += core sql
+QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = lib
-DEFINES += BASECOREPLUGIN_LIBRARY
+CONFIG += plugin
 
 CONFIG += c++17
 
@@ -12,20 +12,21 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ConfigManager.cpp \
-    DatabaseManager.cpp \
-    EventManager.cpp \
-    basecoreplugin.cpp
+    configuiplugin.cpp \
+    configwidget.cpp
 
 HEADERS += \
-    BaseCorePlugin_global.h \
-    ConfigManager.h \
-    DatabaseManager.h \
-    EventManager.h \
-    basecoreplugin.h
+    configuiplugin.h \
+    configwidget.h
+
+FORMS += \
+    configwidget.ui
 
 # Include common directory
 INCLUDEPATH += $$PWD/../../common
+
+# Include BaseCorePlugin directory for ConfigManager
+INCLUDEPATH += $$PWD/../../Cores/BaseCorePlugin
 
 # Default rules for deployment.
 unix {

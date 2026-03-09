@@ -1,0 +1,11 @@
+{
+  "priority": [
+    "BaseCorePlugin",
+    "ConfigUIPlugin",
+    "OtherPlugin"
+  ],
+  "dependencies": {
+    "ConfigUIPlugin": ["BaseCorePlugin"],
+    "OtherPlugin": ["BaseCorePlugin"]
+  }
+}

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "pluginmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,7 +18,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    // 插件窗口就绪槽
+    void onPluginWidgetReady(const QString &pluginName, QWidget *widget);
+
 private:
     Ui::MainWindow *ui;
+    PluginManager *m_pluginManager;
+
+    // 初始化插件管理器
+    void initPluginManager();
 };
 #endif // MAINWINDOW_H
