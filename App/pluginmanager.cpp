@@ -1,5 +1,6 @@
 ﻿#include "pluginmanager.h"
 #include "../common/interfaces/IConfigManager.h"
+#include "../common/interfaces/IPluginWidget.h"
 #include <QDir>
 #include <QDebug>
 #include <QVariantMap>
@@ -119,9 +120,9 @@ bool PluginManager::loadPlugin(const QString &pluginPath)
     m_mapPluginLoaders[name] = loader;
     m_plugins[name] = plugin;
 
-    IPluginWidget *widget = plugin->pluginWidget();
-    if (widget && widget->widget()) {
-        emit pluginWidgetReady(name, widget->widget());
+    IPluginWidget *widgetInterface = qobject_cast<IPluginWidget*>(pluginObject);
+    if (widgetInterface && widgetInterface->widget()) {
+        emit pluginWidgetReady(name, widgetInterface->widget());
     }
 
     qInfo() << "Plugin loaded successfully:" << name;

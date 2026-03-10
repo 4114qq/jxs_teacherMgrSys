@@ -1,0 +1,7 @@
+{
+    "Name": "DatabaseUIPlugin",
+    "Version": "1.0.0",
+    "Description": "Database Management UI Plugin",
+    "Author": "Developer",
+    "Dependencies": ["BaseCorePlugin"]
+}

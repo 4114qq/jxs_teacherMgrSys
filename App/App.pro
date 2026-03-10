@@ -32,3 +32,5 @@ DESTDIR = $$PWD/../bin/x86_64
 # Include common directory
 INCLUDEPATH += $$PWD/../common
 INCLUDEPATH += $$PWD/../Plugins/ConfigUIPlugin
+INCLUDEPATH += $$PWD/../Plugins/DatabaseUIPlugin
+INCLUDEPATH += $$PWD/../Plugins/EventUIPlugin

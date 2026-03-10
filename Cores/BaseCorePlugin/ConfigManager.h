@@ -3,6 +3,7 @@
 
 #include "BaseCorePlugin_global.h"
 #include "../../common/interfaces/IConfigManager.h"
+#include "../../common/interfaces/ILogManager.h"
 #include <QObject>
 #include <QVariantMap>
 #include <QTimer>
@@ -59,7 +60,8 @@ signals:
     void configChanged(const QString &key, const QVariant &value);
     void configReloaded();
 
-private:
+public:
+    void setLogManager(ILogManager *manager);
     QString fullKey(const QString &key) const;
     void notifyWatchers(const QString &key, const QVariant &value);
     QString getDefaultConfigPath() const;
@@ -75,6 +77,7 @@ private:
     QTimer *m_reloadTimer;
 
     mutable QMutex m_mutex;
+    ILogManager *m_logManager;
     QMap<QString, std::function<void(const QVariant&)>> m_watchers;
 };
 

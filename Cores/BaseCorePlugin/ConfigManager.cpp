@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "../../common/interfaces/ILogManager.h"
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -13,6 +14,7 @@ ConfigManager::ConfigManager(QObject *parent)
     , m_fileName("config.json")
     , m_hotReloadEnabled(false)
     , m_reloadTimer(new QTimer(this))
+    , m_logManager(nullptr)
 {
     connect(m_reloadTimer, &QTimer::timeout, this, &ConfigManager::reload);
 }
@@ -122,12 +124,16 @@ bool ConfigManager::load(const QString &filePath)
 
     QFile file(path);
     if (!file.exists()) {
-        qDebug() << "Config file does not exist, using default config:" << path;
+        if (m_logManager) {
+            m_logManager->logDebug("ConfigManager", QString("Config file does not exist, using default config: %1").arg(path));
+        }
         return true;
     }
 
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Failed to open config file:" << path << file.errorString();
+        if (m_logManager) {
+            m_logManager->logWarning("ConfigManager", QString("Failed to open config file: %1, %2").arg(path, file.errorString()));
+        }
         return false;
     }
 
@@ -138,12 +144,16 @@ bool ConfigManager::load(const QString &filePath)
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
 
     if (error.error != QJsonParseError::NoError) {
-        qWarning() << "Failed to parse config file:" << error.errorString();
+        if (m_logManager) {
+            m_logManager->logWarning("ConfigManager", QString("Failed to parse config file: %1").arg(error.errorString()));
+        }
         return false;
     }
 
     if (!doc.isObject()) {
-        qWarning() << "Config file is not a JSON object";
+        if (m_logManager) {
+            m_logManager->logWarning("ConfigManager", "Config file is not a JSON object");
+        }
         return false;
     }
 
@@ -187,7 +197,9 @@ bool ConfigManager::load(const QString &filePath)
         m_configItems.append(item);
     }
 
-    qDebug() << "Config loaded from:" << path << "with" << m_configItems.size() << "items";
+    if (m_logManager) {
+        m_logManager->logInfo("ConfigManager", QString("Config loaded from: %1 with %2 items").arg(path).arg(m_configItems.size()));
+    }
     return true;
 }
 
@@ -196,7 +208,9 @@ bool ConfigManager::save(const QString &filePath)
     QMutexLocker locker(&m_mutex);
 
     if (m_configItems.isEmpty()) {
-        qDebug() << "No config items to save, skipping save operation";
+        if (m_logManager) {
+            m_logManager->logDebug("ConfigManager", "No config items to save, skipping save operation");
+        }
         return true;
     }
 
@@ -211,7 +225,9 @@ bool ConfigManager::save(const QString &filePath)
 
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "Failed to open config file for writing:" << path << file.errorString();
+        if (m_logManager) {
+            m_logManager->logError("ConfigManager", QString("Failed to open config file for writing: %1, %2").arg(path, file.errorString()));
+        }
         return false;
     }
 
@@ -238,7 +254,9 @@ bool ConfigManager::save(const QString &filePath)
     file.write(doc.toJson(QJsonDocument::Indented));
     file.close();
 
-    qDebug() << "Config saved to:" << path;
+    if (m_logManager) {
+        m_logManager->logInfo("ConfigManager", QString("Config saved to: %1").arg(path));
+    }
     return true;
 }
 
@@ -369,6 +387,11 @@ QVariantMap ConfigManager::variantMapFromJsonObject(const QJsonObject &obj)
         map[it.key()] = it.value().toVariant();
     }
     return map;
+}
+
+void ConfigManager::setLogManager(ILogManager *manager)
+{
+    m_logManager = manager;
 }
 
 QList<ConfigItem> ConfigManager::getConfigItems() const

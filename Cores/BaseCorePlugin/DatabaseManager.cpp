@@ -1,4 +1,5 @@
 #include "DatabaseManager.h"
+#include "../../common/interfaces/ILogManager.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QMutexLocker>
@@ -6,13 +7,13 @@
 
 DatabaseManager::DatabaseManager(QObject *parent)
     : QObject(parent)
+    , m_databaseType("QODBC")
     , m_port(0)
     , m_reconnectTimer(new QTimer(this))
     , m_healthCheckTimer(new QTimer(this))
     , m_isConnected(false)
+    , m_logManager(nullptr)
 {
-    detectDatabaseType();
-
     m_connectionName = QString("DatabaseManager_%1").arg(reinterpret_cast<quint64>(this));
 
     QObject::connect(m_reconnectTimer, &QTimer::timeout, this, &DatabaseManager::reconnect);
@@ -27,16 +28,9 @@ DatabaseManager::~DatabaseManager()
     disconnect();
 }
 
-void DatabaseManager::detectDatabaseType()
+void DatabaseManager::setLogManager(ILogManager *manager)
 {
-#if defined(Q_OS_WIN) || defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-    m_databaseType = "QODBC";
-#elif defined(Q_OS_LINUX)
-    m_databaseType = "QMYSQL";
-#else
-    m_databaseType = "QMYSQL";
-#endif
-    qDebug() << "Database type detected:" << m_databaseType;
+    m_logManager = manager;
 }
 
 bool DatabaseManager::connect(const QString &host, int port, const QString &dbName,
@@ -59,11 +53,18 @@ bool DatabaseManager::createConnection()
         m_db.close();
     }
 
+    if (QSqlDatabase::contains(m_connectionName)) {
+        QSqlDatabase tmpDb = QSqlDatabase::database(m_connectionName);
+        if (tmpDb.isOpen()) {
+            tmpDb.close();
+        }
+        QSqlDatabase::removeDatabase(m_connectionName);
+    }
+
     m_db = QSqlDatabase::addDatabase(m_databaseType, m_connectionName);
 
     if (m_databaseType == "QODBC") {
-        QString connectionString = QString("DRIVER={ODBC Driver 17 for SQL Server;}"
-                                          "SERVER=%1,%2;DATABASE=%3;UID=%4;PWD=%5;")
+        QString connectionString = QString("DRIVER={SQL Server};SERVER=%1,%2;DATABASE=%3;UID=%4;PWD=%5;")
                                       .arg(m_host)
                                       .arg(m_port)
                                       .arg(m_dbName)
@@ -84,12 +85,16 @@ bool DatabaseManager::createConnection()
         m_lastError.clear();
         startHealthCheck();
         emit connectionStatusChanged(true);
-        qDebug() << "Database connected successfully";
+        if (m_logManager) {
+            m_logManager->logInfo("DatabaseManager", "Database connected successfully");
+        }
     } else {
         m_lastError = m_db.lastError().text();
         m_isConnected = false;
         emit errorOccurred(m_lastError);
-        qWarning() << "Database connection failed:" << m_lastError;
+        if (m_logManager) {
+            m_logManager->logError("DatabaseManager", "Database connection failed: " + m_lastError);
+        }
         scheduleReconnect();
     }
 
@@ -108,8 +113,6 @@ void DatabaseManager::disconnect()
 
     m_isConnected = false;
     emit connectionStatusChanged(false);
-
-    QSqlDatabase::removeDatabase(m_connectionName);
 }
 
 bool DatabaseManager::isConnected()
@@ -121,7 +124,9 @@ bool DatabaseManager::reconnect()
 {
     QMutexLocker locker(&m_mutex);
 
-    qDebug() << "Attempting to reconnect to database...";
+    if (m_logManager) {
+        m_logManager->logWarning("DatabaseManager", "Attempting to reconnect to database...");
+    }
     return createConnection();
 }
 
@@ -144,7 +149,9 @@ bool DatabaseManager::checkConnection()
         m_isConnected = false;
         emit connectionStatusChanged(false);
         emit errorOccurred(m_lastError);
-        qWarning() << "Database connection check failed:" << m_lastError;
+        if (m_logManager) {
+            m_logManager->logError("DatabaseManager", "Database connection check failed: " + m_lastError);
+        }
         scheduleReconnect();
         return false;
     }
@@ -152,7 +159,9 @@ bool DatabaseManager::checkConnection()
     if (!m_isConnected) {
         m_isConnected = true;
         emit connectionStatusChanged(true);
-        qDebug() << "Database connection restored";
+        if (m_logManager) {
+            m_logManager->logInfo("DatabaseManager", "Database connection restored");
+        }
     }
 
     return true;
@@ -173,7 +182,9 @@ bool DatabaseManager::execute(const QString &sql)
     if (!ok) {
         m_lastError = query.lastError().text();
         emit errorOccurred(m_lastError);
-        qWarning() << "SQL execute failed:" << m_lastError << "SQL:" << sql;
+        if (m_logManager) {
+            m_logManager->logError("DatabaseManager", QString("SQL execute failed: %1, SQL: %2").arg(m_lastError, sql));
+        }
     }
 
     return ok;
@@ -201,7 +212,9 @@ QSharedPointer<QSqlQuery> DatabaseManager::query(const QString &sql, const QVari
     if (!ok) {
         m_lastError = query->lastError().text();
         emit errorOccurred(m_lastError);
-        qWarning() << "SQL query failed:" << m_lastError << "SQL:" << sql;
+        if (m_logManager) {
+            m_logManager->logError("DatabaseManager", QString("SQL query failed: %1, SQL: %2").arg(m_lastError, sql));
+        }
     }
 
     return query;
@@ -254,6 +267,17 @@ QString DatabaseManager::databaseType() const
     return m_databaseType;
 }
 
+void DatabaseManager::setDatabaseType(const QString &type)
+{
+    if (type.toLower() == "sqlserver" || type.toLower() == "mssql") {
+        m_databaseType = "QODBC";
+    } else if (type.toLower() == "mysql") {
+        m_databaseType = "QMYSQL";
+    } else {
+        m_databaseType = type;
+    }
+}
+
 void DatabaseManager::startHealthCheck()
 {
     if (!m_healthCheckTimer->isActive()) {
@@ -270,8 +294,4 @@ void DatabaseManager::stopHealthCheck()
 
 void DatabaseManager::scheduleReconnect()
 {
-    if (!m_reconnectTimer->isActive()) {
-        qDebug() << "Scheduling reconnect in 5 seconds...";
-        m_reconnectTimer->start(5000);
-    }
 }

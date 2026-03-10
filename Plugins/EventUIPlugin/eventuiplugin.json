@@ -1,0 +1,7 @@
+{
+    "Name": "EventUIPlugin",
+    "Version": "1.0.0",
+    "Description": "Event monitoring and communication UI plugin",
+    "Author": "Developer",
+    "Dependencies": ["BaseCorePlugin"]
+}

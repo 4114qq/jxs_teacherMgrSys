@@ -1,26 +1,23 @@
-#ifndef CONFIGUIPLUGIN_H
-#define CONFIGUIPLUGIN_H
+#ifndef DATABASEUIPLUGIN_H
+#define DATABASEUIPLUGIN_H
 
+#include <QObject>
+#include <QVariantMap>
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
 
-class ConfigWidget;
+class DatabaseWidget;
 
-/**
- * @brief 配置管理界面插件
- * 提供配置管理的用户界面
- */
-class ConfigUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
+class DatabaseUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.example.ConfigUIPlugin" FILE "configuiplugin.json")
+    Q_PLUGIN_METADATA(IID "com.example.DatabaseUIPlugin" FILE "databaseuiplugin.json")
     Q_INTERFACES(IBasePlugin IPluginWidget)
 
 public:
-    ConfigUIPlugin(QObject *parent = nullptr);
-    ~ConfigUIPlugin() override;
+    DatabaseUIPlugin(QObject *parent = nullptr);
+    ~DatabaseUIPlugin() override;
 
-    // IBasePlugin 接口实现
     QString name() const override;
     QString version() const override;
     QString description() const override;
@@ -39,22 +36,20 @@ public:
     bool loadConfig() override;
     bool saveConfig() override;
 
-    // IPluginWidget interface
     QWidget *widget() const override;
     QString widgetTitle() const override;
     QIcon widgetIcon() const override;
 
-    void setConfigManager(IConfigManager *configManager);
-
-    void setEventManager(IBaseEventBus *eventManager);
+    void setDatabaseManager(IDatabaseManager *manager);
+    void setEventManager(IBaseEventBus *manager);
 
 private:
-    ConfigWidget *m_configWidget;
-    IBaseEventBus *m_eventManager;
+    DatabaseWidget *m_databaseWidget;
     IDatabaseManager *m_databaseManager;
     ILogManager *m_logManager;
-    IConfigManager *m_configManager;
+    IBaseEventBus *m_eventManager;
+    QVariantMap m_config;
 
 };
 
-#endif // CONFIGUIPLUGIN_H
+#endif // DATABASEUIPLUGIN_H

@@ -3,6 +3,7 @@
 
 #include "BaseCorePlugin_global.h"
 #include "../../common/interfaces/IDatabaseManager.h"
+#include "../../common/interfaces/ILogManager.h"
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -18,6 +19,8 @@ class BASECOREPLUGIN_EXPORT DatabaseManager : public QObject, public IDatabaseMa
 public:
     explicit DatabaseManager(QObject *parent = nullptr);
     ~DatabaseManager();
+
+    void setLogManager(ILogManager *manager);
 
     bool connect(const QString &host, int port, const QString &dbName,
                 const QString &user, const QString &password) override;
@@ -37,12 +40,13 @@ public:
     QString lastError() const override;
     QString databaseType() const override;
 
+    void setDatabaseType(const QString &type);
+
 signals:
     void connectionStatusChanged(bool connected);
     void errorOccurred(const QString &error);
 
 private:
-    void detectDatabaseType();
     bool createConnection();
     void startHealthCheck();
     void stopHealthCheck();
@@ -64,6 +68,7 @@ private:
 
     mutable QMutex m_mutex;
     QString m_connectionName;
+    ILogManager *m_logManager;
 };
 
 #endif // DATABASEMANAGER_H

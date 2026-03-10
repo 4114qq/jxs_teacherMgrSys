@@ -4,8 +4,13 @@
 #include <QTabWidget>
 #include <QDir>
 #include "../../Plugins/ConfigUIPlugin/configuiplugin.h"
+#include "../../Plugins/DatabaseUIPlugin/databaseuiplugin.h"
+#include "../../Plugins/LogUIPlugin/loguiplugin.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IConfigManager.h"
+#include "../../common/interfaces/IDatabaseManager.h"
+#include "../../common/interfaces/ILogManager.h"
+#include "../../common/interfaces/IBaseEventBus.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -83,6 +88,48 @@ void MainWindow::onPluginWidgetReady(const QString &pluginName, QWidget *widget)
                 QVariant var;
                 var.setValue(static_cast<void*>(configMgr));
                 configUI->setConfig("configManagerPtr", var);
+            }
+        }
+    }
+
+    // 如果是 DatabaseUIPlugin，传递 databaseManager
+    if (pluginName == "DatabaseUIPlugin") {
+        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
+        IBasePlugin *dbUI = m_pluginManager->getPlugin("DatabaseUIPlugin");
+        if (baseCore && dbUI) {
+            IDatabaseManager *dbMgr = baseCore->databaseManager();
+            if (dbMgr) {
+                QVariant var;
+                var.setValue(static_cast<void*>(dbMgr));
+                dbUI->setConfig("databaseManagerPtr", var);
+            }
+        }
+    }
+
+    // 如果是 LogUIPlugin，传递 logManager
+    if (pluginName == "LogUIPlugin") {
+        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
+        IBasePlugin *logUI = m_pluginManager->getPlugin("LogUIPlugin");
+        if (baseCore && logUI) {
+            ILogManager *logMgr = baseCore->logManager();
+            if (logMgr) {
+                QVariant var;
+                var.setValue(static_cast<void*>(logMgr));
+                logUI->setConfig("logManagerPtr", var);
+            }
+        }
+    }
+
+    // 如果是 EventUIPlugin，传递 eventManager
+    if (pluginName == "EventUIPlugin") {
+        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
+        IBasePlugin *eventUI = m_pluginManager->getPlugin("EventUIPlugin");
+        if (baseCore && eventUI) {
+            IBaseEventBus *eventMgr = baseCore->eventManager();
+            if (eventMgr) {
+                QVariant var;
+                var.setValue(static_cast<void*>(eventMgr));
+                eventUI->setConfig("eventManagerPtr", var);
             }
         }
     }

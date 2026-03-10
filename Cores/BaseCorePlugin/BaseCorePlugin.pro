@@ -15,6 +15,7 @@ SOURCES += \
     ConfigManager.cpp \
     DatabaseManager.cpp \
     EventManager.cpp \
+    LogManager.cpp \
     basecoreplugin.cpp
 
 HEADERS += \
@@ -22,6 +23,7 @@ HEADERS += \
     ConfigManager.h \
     DatabaseManager.h \
     EventManager.h \
+    LogManager.h \
     basecoreplugin.h
 
 # Include common directory

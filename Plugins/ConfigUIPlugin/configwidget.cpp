@@ -236,16 +236,40 @@ void ConfigWidget::onTableItemChanged(QTableWidgetItem *item)
     }
 
     int row = item->row();
+    int col = item->column();
+    if (col != 1) {
+        return;
+    }
+
     QString key = ui->tableWidget->item(row, 0)->text();
     QString value = item->text();
     QString description = ui->tableWidget->item(row, 2)->text();
-    QString type = ui->tableWidget->item(row, 3)->text();
 
     ConfigItem configItem;
     configItem.key = key;
-    configItem.value = value;
     configItem.description = description;
-    configItem.type = type;
+
+    if (value.toLower() == "true" || value.toLower() == "false") {
+        configItem.value = (value.toLower() == "true");
+        configItem.type = "bool";
+    } else {
+        bool isInt;
+        int intValue = value.toInt(&isInt);
+        if (isInt) {
+            configItem.value = intValue;
+            configItem.type = "int";
+        } else {
+            bool isDouble;
+            double doubleValue = value.toDouble(&isDouble);
+            if (isDouble) {
+                configItem.value = doubleValue;
+                configItem.type = "double";
+            } else {
+                configItem.value = value;
+                configItem.type = "string";
+            }
+        }
+    }
 
     m_configManager->updateConfigItem(configItem);
 }

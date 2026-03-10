@@ -1,14 +1,17 @@
 ﻿#include "basecoreplugin.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
+#include "../../common/interfaces/ILogManager.h"
+#include "EventManager.h"
 #include <QWidget>
 
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
+    m_pluginWidget(nullptr),
     m_eventManager(new CoreEventBus()),
     m_databaseManager(new DatabaseManager(this)),
-    m_configManager(new ConfigManager(this)),
-    m_pluginWidget(nullptr)
+    m_logManager(new LogManager(this)),
+    m_configManager(new ConfigManager(this))
 {
 }
 
@@ -40,6 +43,7 @@ QString BaseCorePlugin::author() const
 bool BaseCorePlugin::initialize()
 {
     if (m_configManager) {
+        m_configManager->setLogManager(m_logManager);
         m_configManager->load();
     }
     loadConfig();
@@ -48,6 +52,36 @@ bool BaseCorePlugin::initialize()
 
 bool BaseCorePlugin::startPlugin()
 {
+    if (m_configManager) {
+        QString dbType = m_configManager->get("Database_Type", "MySQL").toString();
+        QString dbHost = m_configManager->get("Database_Host", "localhost").toString();
+        int dbPort = m_configManager->get("Database_Port", 3306).toInt();
+        QString dbName = m_configManager->get("Database_Name", "testdb").toString();
+        QString dbUser = m_configManager->get("Database_User", "root").toString();
+        QString dbPassword = m_configManager->get("Database_Password", "").toString();
+
+        if (m_databaseManager) {
+            m_databaseManager->setLogManager(m_logManager);
+            m_databaseManager->setDatabaseType(dbType);
+            m_databaseManager->connect(dbHost, dbPort, dbName, dbUser, dbPassword);
+        }
+
+        if (m_logManager) {
+            QString logLevelStr = m_configManager->get("Log_Level", "info").toString();
+            LogLevel logLevel = LogLevel::INFO;
+            if (logLevelStr.toLower() == "debug") {
+                logLevel = LogLevel::DEBUG;
+            } else if (logLevelStr.toLower() == "warning") {
+                logLevel = LogLevel::WARNING;
+            } else if (logLevelStr.toLower() == "error") {
+                logLevel = LogLevel::ERROR;
+            }
+            m_logManager->setLogLevel(logLevel);
+
+            QString logPath = m_configManager->get("Log_Path", "./logs").toString();
+            m_logManager->setLogFilePath(logPath);
+        }
+    }
     return true;
 }
 
@@ -107,12 +141,12 @@ IDatabaseManager *BaseCorePlugin::databaseManager() const
     return m_databaseManager;
 }
 
+ILogManager *BaseCorePlugin::logManager() const
+{
+    return m_logManager;
+}
+
 IConfigManager *BaseCorePlugin::configManager() const
 {
     return m_configManager;
-}
-
-IPluginWidget *BaseCorePlugin::pluginWidget() const
-{
-    return nullptr; // BaseCorePlugin 不提供界面
 }

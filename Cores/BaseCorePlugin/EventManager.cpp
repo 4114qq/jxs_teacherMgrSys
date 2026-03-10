@@ -3,11 +3,13 @@
 bool CoreEventBus::publish(const QString& eventType,
                           const QVariantMap& data)
 {
+    emit eventPublished(eventType, data);
+
     if (!m_subscriptions.contains(eventType)) return false;
-    
+
     const auto& subs = m_subscriptions[eventType];
     for (const auto& sub : subs) {
-        QMetaObject::invokeMethod(sub.receiver, sub.slot, 
+        QMetaObject::invokeMethod(sub.receiver, sub.slot,
                                  Q_ARG(QVariantMap, data));
     }
 

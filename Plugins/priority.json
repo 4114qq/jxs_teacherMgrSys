@@ -2,10 +2,14 @@
   "priority": [
     "BaseCorePlugin",
     "ConfigUIPlugin",
-    "OtherPlugin"
+    "DatabaseUIPlugin",
+    "LogUIPlugin",
+    "EventUIPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
-    "OtherPlugin": ["BaseCorePlugin"]
+    "DatabaseUIPlugin": ["BaseCorePlugin"],
+    "LogUIPlugin": ["BaseCorePlugin"],
+    "EventUIPlugin": ["BaseCorePlugin"]
   }
 }

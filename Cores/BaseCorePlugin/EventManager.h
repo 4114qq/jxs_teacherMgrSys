@@ -2,20 +2,24 @@
 #define EVENTMANAGER_H
 #include <QObject>
 #include <QVariantMap>
-#include "interfaces/IBaseEventBus.h"
+#include "../../common/interfaces/IBaseEventBus.h"
+#include "BaseCorePlugin_global.h"
 
-class CoreEventBus : public QObject, public IBaseEventBus
+class BASECOREPLUGIN_EXPORT CoreEventBus : public QObject, public IBaseEventBus
 {
     Q_OBJECT
-    
+
 public:
     bool publish(const QString& eventType,
                 const QVariantMap& data = QVariantMap()) override;
-    void subscribe(const QString& eventType, 
-                  QObject* receiver, 
+    void subscribe(const QString& eventType,
+                  QObject* receiver,
                   const char* slot) override;
-    void unsubscribe(const QString& eventType, 
+    void unsubscribe(const QString& eventType,
                     QObject* receiver) override;
+
+signals:
+    void eventPublished(const QString &eventType, const QVariantMap &data);
 
 private:
     struct Subscription {

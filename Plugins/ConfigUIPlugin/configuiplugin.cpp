@@ -2,11 +2,14 @@
 #include "configwidget.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IConfigManager.h"
+#include "../../common/interfaces/ILogManager.h"
 
 ConfigUIPlugin::ConfigUIPlugin(QObject *parent)
     : QObject(parent)
     , m_configWidget(nullptr)
     , m_eventManager(nullptr)
+    , m_databaseManager(nullptr)
+    , m_logManager(nullptr)
     , m_configManager(nullptr)
 {
 }
@@ -120,6 +123,11 @@ IDatabaseManager *ConfigUIPlugin::databaseManager() const
     return m_databaseManager;
 }
 
+ILogManager *ConfigUIPlugin::logManager() const
+{
+    return m_logManager;
+}
+
 IConfigManager *ConfigUIPlugin::configManager() const
 {
     return m_configManager;
@@ -138,11 +146,6 @@ QString ConfigUIPlugin::widgetTitle() const
 QIcon ConfigUIPlugin::widgetIcon() const
 {
     return QIcon();
-}
-
-IPluginWidget *ConfigUIPlugin::pluginWidget() const
-{
-    return const_cast<ConfigUIPlugin*>(this);
 }
 
 QStringList ConfigUIPlugin::dependencies() const
