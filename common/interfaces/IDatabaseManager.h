@@ -22,6 +22,7 @@ public:
     virtual bool checkConnection() = 0;
 
     virtual bool execute(const QString &sql) = 0;
+    virtual bool execute(const QString &sql, const QVariantMap &params) = 0;
     virtual QSharedPointer<QSqlQuery> query(const QString &sql, const QVariantMap &params = QVariantMap()) = 0;
 
     virtual bool transaction() = 0;

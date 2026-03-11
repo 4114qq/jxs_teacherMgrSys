@@ -4,12 +4,14 @@
     "ConfigUIPlugin",
     "DatabaseUIPlugin",
     "LogUIPlugin",
-    "EventUIPlugin"
+    "EventUIPlugin",
+    "UserAuthUIPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
     "DatabaseUIPlugin": ["BaseCorePlugin"],
     "LogUIPlugin": ["BaseCorePlugin"],
-    "EventUIPlugin": ["BaseCorePlugin"]
+    "EventUIPlugin": ["BaseCorePlugin"],
+    "UserAuthUIPlugin": ["BaseCorePlugin"]
   }
 }

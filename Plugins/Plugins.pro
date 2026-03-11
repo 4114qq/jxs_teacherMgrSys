@@ -2,4 +2,5 @@ TEMPLATE = subdirs
 SUBDIRS += ConfigUIPlugin \
             DatabaseUIPlugin \
             LogUIPlugin \
-            EventUIPlugin
+            EventUIPlugin \
+            UserAuthUIPlugin

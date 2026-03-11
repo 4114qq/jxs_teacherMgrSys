@@ -1,0 +1,7 @@
+{
+    "Name": "UserAuthUIPlugin",
+    "Version": "1.0.0",
+    "Description": "User authentication and role management UI plugin",
+    "Author": "Developer",
+    "Dependencies": ["BaseCorePlugin"]
+}

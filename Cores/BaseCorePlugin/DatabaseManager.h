@@ -31,6 +31,7 @@ public:
     bool checkConnection() override;
 
     bool execute(const QString &sql) override;
+    bool execute(const QString &sql, const QVariantMap &params) override;
     QSharedPointer<QSqlQuery> query(const QString &sql, const QVariantMap &params = QVariantMap()) override;
 
     bool transaction() override;

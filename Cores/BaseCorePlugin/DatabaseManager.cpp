@@ -190,6 +190,33 @@ bool DatabaseManager::execute(const QString &sql)
     return ok;
 }
 
+bool DatabaseManager::execute(const QString &sql, const QVariantMap &params)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (!m_db.isOpen()) {
+        m_lastError = "Database is not connected";
+        return false;
+    }
+
+    QSqlQuery query(m_db);
+    query.prepare(sql);
+    for (auto it = params.constBegin(); it != params.constEnd(); ++it) {
+        query.bindValue(it.key(), it.value());
+    }
+    bool ok = query.exec();
+
+    if (!ok) {
+        m_lastError = query.lastError().text();
+        emit errorOccurred(m_lastError);
+        if (m_logManager) {
+            m_logManager->logError("DatabaseManager", QString("SQL execute failed: %1, SQL: %2").arg(m_lastError, sql));
+        }
+    }
+
+    return ok;
+}
+
 QSharedPointer<QSqlQuery> DatabaseManager::query(const QString &sql, const QVariantMap &params)
 {
     QMutexLocker locker(&m_mutex);

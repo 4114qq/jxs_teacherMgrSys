@@ -12,6 +12,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    AuthManager.cpp \
     ConfigManager.cpp \
     DatabaseManager.cpp \
     EventManager.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
     basecoreplugin.cpp
 
 HEADERS += \
+    AuthManager.h \
     BaseCorePlugin_global.h \
     ConfigManager.h \
     DatabaseManager.h \
