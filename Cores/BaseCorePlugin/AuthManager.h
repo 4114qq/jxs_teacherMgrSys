@@ -55,6 +55,9 @@ public:
     bool deletePermission(int id) override;
     bool assignPermissionsToRole(int roleId, const QList<int> &permissionIds) override;
 
+private:
+    void parseRoleIds(const QString &roleIdsStr);
+
 signals:
     void userLoggedIn(const QVariantMap &user);
     void userLoggedOut();
@@ -66,7 +69,6 @@ private:
     int m_loginType;
     QStringList m_currentPermissions;
     QStringList m_currentRoles;
-    void parseRoleIds(const QString &roleIdsStr);
 };
 
 #endif // AUTHMANAGER_H

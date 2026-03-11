@@ -41,3 +41,9 @@ Thumbs.db
 bin/x86_64/configs/*.json
 !bin/x86_64/configs/config.json
 !bin/x86_64/configs/priority.json
+bin/x86_64/logs/2026-03-10.log
+bin/x86_64/logs/2026-03-11.log
+bin/x86_64/plugins/BaseCorePlugin.exp
+bin/x86_64/plugins/BaseCorePlugin.ilk
+bin/x86_64/plugins/BaseCorePlugin.lib
+bin/x86_64/plugins/ConfigUIPlugin.ilk

@@ -1,6 +1,5 @@
 #include "basecoreplugin.h"
 #include "../../common/interfaces/IBasePlugin.h"
-#include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/ILogManager.h"
 #include "EventManager.h"
 #include <QWidget>
