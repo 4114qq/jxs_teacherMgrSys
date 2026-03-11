@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include "pluginmanager.h"
-#include "../common/interfaces/IConfigManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,16 +18,16 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private:
+    // 初始化插件管理器
+    void initPluginManager();
+
 private slots:
     // 插件窗口就绪槽
     void onPluginWidgetReady(const QString &pluginName, QWidget *widget);
-    void onConfigManagerReady(IConfigManager *configManager);
 
 private:
     Ui::MainWindow *ui;
     PluginManager *m_pluginManager;
-
-    // 初始化插件管理器
-    void initPluginManager();
 };
 #endif // MAINWINDOW_H

@@ -5,6 +5,7 @@
 #include <QVariantMap>
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
+#include "../../common/interfaces/IAuthManager.h"
 
 class DatabaseWidget;
 
@@ -28,6 +29,7 @@ public:
     IBaseEventBus *eventManager() const override;
     IDatabaseManager *databaseManager() const override;
     ILogManager *logManager() const override;
+    IAuthManager *authManager() const override;
     IConfigManager *configManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
@@ -43,10 +45,15 @@ public:
     void setDatabaseManager(IDatabaseManager *manager);
     void setEventManager(IBaseEventBus *manager);
 
+    void setCore(IBasePlugin *core) override;
+    IBasePlugin *core() const override;
+
 private:
+    IBasePlugin *m_core;
     DatabaseWidget *m_databaseWidget;
     IDatabaseManager *m_databaseManager;
     ILogManager *m_logManager;
+    IAuthManager *m_authManager;
     IBaseEventBus *m_eventManager;
     QVariantMap m_config;
 

@@ -1,4 +1,4 @@
-﻿#ifndef BASECOREPLUGIN_H
+#ifndef BASECOREPLUGIN_H
 #define BASECOREPLUGIN_H
 
 #include "BaseCorePlugin_global.h"
@@ -6,6 +6,7 @@
 #include "DatabaseManager.h"
 #include "ConfigManager.h"
 #include "LogManager.h"
+#include "AuthManager.h"
 
 /**
  * @brief 基础核心插件
@@ -45,17 +46,23 @@ public:
     QStringList dependencies() const override;
 
     ILogManager *logManager() const override;
+    IAuthManager *authManager() const override;
+
+    void setCore(IBasePlugin *core) override;
+    IBasePlugin *core() const override;
 
 private:
     // 内部类实现 IPluginWidget
     class PluginWidgetImpl;
     PluginWidgetImpl *m_pluginWidget;
 
+    IBasePlugin *m_core;
     QMap<QString, QVariant> m_config;
     IBaseEventBus *m_eventManager;
     mutable DatabaseManager *m_databaseManager;
     mutable LogManager *m_logManager;
     mutable ConfigManager *m_configManager;
+    mutable AuthManager *m_authManager;
 
 };
 

@@ -1,14 +1,17 @@
 #include "eventuiplugin.h"
 #include "eventwidget.h"
 #include "../../common/interfaces/IBaseEventBus.h"
+#include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/ILogManager.h"
 
 EventUIPlugin::EventUIPlugin(QObject *parent)
     : QObject(parent)
+    , m_core(nullptr)
     , m_eventWidget(nullptr)
     , m_eventManager(nullptr)
     , m_databaseManager(nullptr)
     , m_logManager(nullptr)
+    , m_authManager(nullptr)
     , m_configManager(nullptr)
 {
 }
@@ -87,6 +90,11 @@ ILogManager *EventUIPlugin::logManager() const
     return m_logManager;
 }
 
+IAuthManager *EventUIPlugin::authManager() const
+{
+    return m_authManager;
+}
+
 IConfigManager *EventUIPlugin::configManager() const
 {
     return nullptr;
@@ -138,4 +146,21 @@ void EventUIPlugin::setEventManager(IBaseEventBus *manager)
     if (m_eventWidget) {
         m_eventWidget->setEventManager(manager);
     }
+}
+
+void EventUIPlugin::setCore(IBasePlugin *core)
+{
+    m_core = core;
+
+    if (m_core) {
+        m_eventManager = m_core->eventManager();
+        if (m_eventWidget && m_eventManager) {
+            m_eventWidget->setEventManager(m_eventManager);
+        }
+    }
+}
+
+IBasePlugin *EventUIPlugin::core() const
+{
+    return m_core;
 }

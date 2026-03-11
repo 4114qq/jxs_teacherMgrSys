@@ -3,6 +3,7 @@
 
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
+#include "../../common/interfaces/IAuthManager.h"
 
 class ConfigWidget;
 
@@ -31,6 +32,7 @@ public:
     IBaseEventBus *eventManager() const override;
     IDatabaseManager *databaseManager() const override;
     ILogManager *logManager() const override;
+    IAuthManager *authManager() const override;
     IConfigManager *configManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
@@ -48,11 +50,16 @@ public:
 
     void setEventManager(IBaseEventBus *eventManager);
 
+    void setCore(IBasePlugin *core) override;
+    IBasePlugin *core() const override;
+
 private:
+    IBasePlugin *m_core;
     ConfigWidget *m_configWidget;
     IBaseEventBus *m_eventManager;
     IDatabaseManager *m_databaseManager;
     ILogManager *m_logManager;
+    IAuthManager *m_authManager;
     IConfigManager *m_configManager;
 
 };

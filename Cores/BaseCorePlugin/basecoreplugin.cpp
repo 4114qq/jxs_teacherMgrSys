@@ -1,4 +1,4 @@
-﻿#include "basecoreplugin.h"
+#include "basecoreplugin.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/ILogManager.h"
@@ -8,10 +8,12 @@
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
     m_pluginWidget(nullptr),
+    m_core(this),
     m_eventManager(new CoreEventBus()),
     m_databaseManager(new DatabaseManager(this)),
     m_logManager(new LogManager(this)),
-    m_configManager(new ConfigManager(this))
+    m_configManager(new ConfigManager(this)),
+    m_authManager(new AuthManager(this))
 {
 }
 
@@ -64,6 +66,10 @@ bool BaseCorePlugin::startPlugin()
             m_databaseManager->setLogManager(m_logManager);
             m_databaseManager->setDatabaseType(dbType);
             m_databaseManager->connect(dbHost, dbPort, dbName, dbUser, dbPassword);
+        }
+
+        if (m_authManager) {
+            m_authManager->setDatabaseManager(m_databaseManager);
         }
 
         if (m_logManager) {
@@ -146,7 +152,22 @@ ILogManager *BaseCorePlugin::logManager() const
     return m_logManager;
 }
 
+IAuthManager *BaseCorePlugin::authManager() const
+{
+    return m_authManager;
+}
+
 IConfigManager *BaseCorePlugin::configManager() const
 {
     return m_configManager;
+}
+
+void BaseCorePlugin::setCore(IBasePlugin *core)
+{
+    m_core = core;
+}
+
+IBasePlugin *BaseCorePlugin::core() const
+{
+    return m_core;
 }

@@ -107,6 +107,11 @@ bool PluginManager::loadPlugin(const QString &pluginPath)
         return false;
     }
 
+    IBasePlugin *baseCorePlugin = m_plugins.value("BaseCorePlugin");
+    if (baseCorePlugin && plugin->name() != "BaseCorePlugin") {
+        plugin->setCore(baseCorePlugin);
+    }
+
     if (!plugin->startPlugin()) {
         qWarning() << "Failed to start plugin:" << plugin->name();
         plugin->cleanup();

@@ -1,11 +1,11 @@
-﻿#ifndef IBASEPLUGIN_H
+#ifndef IBASEPLUGIN_H
 #define IBASEPLUGIN_H
 
 #include "IBaseEventBus.h"
 #include "IDatabaseManager.h"
 #include "IConfigManager.h"
-#include "IPluginWidget.h"
 #include "ILogManager.h"
+#include "IAuthManager.h"
 #include <QObject>
 #include <QString>
 #include <QVariant>
@@ -34,8 +34,12 @@ public:
     virtual IBaseEventBus *eventManager() const = 0;
     virtual IDatabaseManager *databaseManager() const = 0;
     virtual ILogManager *logManager() const = 0;
+    virtual IAuthManager *authManager() const = 0;
     virtual IConfigManager *configManager() const = 0;
     virtual QStringList dependencies() const = 0;
+
+    virtual void setCore(IBasePlugin *core) = 0;
+    virtual IBasePlugin *core() const = 0;
 };
 
 #define IBASEPLUGIN_IID "com.jxs.teacherMgrSys.IBasePlugin"

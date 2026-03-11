@@ -4,8 +4,10 @@
 
 LogUIPlugin::LogUIPlugin(QObject *parent)
     : QObject(parent)
+    , m_core(nullptr)
     , m_logWidget(nullptr)
     , m_logManager(nullptr)
+    , m_authManager(nullptr)
     , m_databaseManager(nullptr)
     , m_eventManager(nullptr)
 {
@@ -70,6 +72,11 @@ IDatabaseManager *LogUIPlugin::databaseManager() const
 ILogManager *LogUIPlugin::logManager() const
 {
     return m_logManager;
+}
+
+IAuthManager *LogUIPlugin::authManager() const
+{
+    return m_authManager;
 }
 
 IConfigManager *LogUIPlugin::configManager() const
@@ -139,4 +146,21 @@ void LogUIPlugin::setLogManager(ILogManager *manager)
     if (m_logWidget) {
         m_logWidget->setLogManager(manager);
     }
+}
+
+void LogUIPlugin::setCore(IBasePlugin *core)
+{
+    m_core = core;
+
+    if (m_core) {
+        m_logManager = m_core->logManager();
+        if (m_logWidget && m_logManager) {
+            m_logWidget->setLogManager(m_logManager);
+        }
+    }
+}
+
+IBasePlugin *LogUIPlugin::core() const
+{
+    return m_core;
 }

@@ -6,10 +6,12 @@
 
 ConfigUIPlugin::ConfigUIPlugin(QObject *parent)
     : QObject(parent)
+    , m_core(nullptr)
     , m_configWidget(nullptr)
     , m_eventManager(nullptr)
     , m_databaseManager(nullptr)
     , m_logManager(nullptr)
+    , m_authManager(nullptr)
     , m_configManager(nullptr)
 {
 }
@@ -128,6 +130,11 @@ ILogManager *ConfigUIPlugin::logManager() const
     return m_logManager;
 }
 
+IAuthManager *ConfigUIPlugin::authManager() const
+{
+    return m_authManager;
+}
+
 IConfigManager *ConfigUIPlugin::configManager() const
 {
     return m_configManager;
@@ -151,4 +158,21 @@ QIcon ConfigUIPlugin::widgetIcon() const
 QStringList ConfigUIPlugin::dependencies() const
 {
     return {"BaseCorePlugin"};
+}
+
+void ConfigUIPlugin::setCore(IBasePlugin *core)
+{
+    m_core = core;
+
+    if (m_core) {
+        m_configManager = m_core->configManager();
+        if (m_configWidget && m_configManager) {
+            m_configWidget->setConfigManager(m_configManager);
+        }
+    }
+}
+
+IBasePlugin *ConfigUIPlugin::core() const
+{
+    return m_core;
 }

@@ -11,6 +11,7 @@
 #include "../../common/interfaces/IDatabaseManager.h"
 #include "../../common/interfaces/ILogManager.h"
 #include "../../common/interfaces/IBaseEventBus.h"
+#include "../../common/interfaces/IAuthManager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -36,7 +37,6 @@ void MainWindow::initPluginManager()
     
     // 连接信号
     connect(m_pluginManager, &PluginManager::pluginWidgetReady, this, &MainWindow::onPluginWidgetReady);
-    connect(m_pluginManager, &PluginManager::configManagerReady, this, &MainWindow::onConfigManagerReady);
     
     // 确定基础目录
     QString baseDir = QCoreApplication::applicationDirPath();
@@ -78,76 +78,6 @@ void MainWindow::onPluginWidgetReady(const QString &pluginName, QWidget *widget)
     // 将插件窗口添加到 tabWidget
     tabWidget->addTab(widget, pluginName);
 
-    // 如果是 ConfigUIPlugin，传递 configManager
-    if (pluginName == "ConfigUIPlugin") {
-        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
-        IBasePlugin *configUI = m_pluginManager->getPlugin("ConfigUIPlugin");
-        if (baseCore && configUI) {
-            IConfigManager *configMgr = baseCore->configManager();
-            if (configMgr) {
-                QVariant var;
-                var.setValue(static_cast<void*>(configMgr));
-                configUI->setConfig("configManagerPtr", var);
-            }
-        }
-    }
-
-    // 如果是 DatabaseUIPlugin，传递 databaseManager
-    if (pluginName == "DatabaseUIPlugin") {
-        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
-        IBasePlugin *dbUI = m_pluginManager->getPlugin("DatabaseUIPlugin");
-        if (baseCore && dbUI) {
-            IDatabaseManager *dbMgr = baseCore->databaseManager();
-            if (dbMgr) {
-                QVariant var;
-                var.setValue(static_cast<void*>(dbMgr));
-                dbUI->setConfig("databaseManagerPtr", var);
-            }
-        }
-    }
-
-    // 如果是 LogUIPlugin，传递 logManager
-    if (pluginName == "LogUIPlugin") {
-        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
-        IBasePlugin *logUI = m_pluginManager->getPlugin("LogUIPlugin");
-        if (baseCore && logUI) {
-            ILogManager *logMgr = baseCore->logManager();
-            if (logMgr) {
-                QVariant var;
-                var.setValue(static_cast<void*>(logMgr));
-                logUI->setConfig("logManagerPtr", var);
-            }
-        }
-    }
-
-    // 如果是 EventUIPlugin，传递 eventManager
-    if (pluginName == "EventUIPlugin") {
-        IBasePlugin *baseCore = m_pluginManager->getPlugin("BaseCorePlugin");
-        IBasePlugin *eventUI = m_pluginManager->getPlugin("EventUIPlugin");
-        if (baseCore && eventUI) {
-            IBaseEventBus *eventMgr = baseCore->eventManager();
-            if (eventMgr) {
-                QVariant var;
-                var.setValue(static_cast<void*>(eventMgr));
-                eventUI->setConfig("eventManagerPtr", var);
-            }
-        }
-    }
-    
     // 调整窗口大小
     resize(800, 600);
-}
-
-void MainWindow::onConfigManagerReady(IConfigManager *configManager)
-{
-    if (!configManager) {
-        return;
-    }
-
-    IBasePlugin *configUI = m_pluginManager->getPlugin("ConfigUIPlugin");
-    if (configUI) {
-        QVariant var;
-        var.setValue(static_cast<void*>(configManager));
-        configUI->setConfig("configManagerPtr", var);
-    }
 }

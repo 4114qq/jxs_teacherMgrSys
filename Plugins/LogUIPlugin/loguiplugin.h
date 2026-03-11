@@ -6,6 +6,7 @@
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/ILogManager.h"
+#include "../../common/interfaces/IAuthManager.h"
 
 class LogWidget;
 
@@ -29,6 +30,7 @@ public:
     IBaseEventBus *eventManager() const override;
     IDatabaseManager *databaseManager() const override;
     ILogManager *logManager() const override;
+    IAuthManager *authManager() const override;
     IConfigManager *configManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
@@ -43,9 +45,14 @@ public:
 
     void setLogManager(ILogManager *manager);
 
+    void setCore(IBasePlugin *core) override;
+    IBasePlugin *core() const override;
+
 private:
+    IBasePlugin *m_core;
     LogWidget *m_logWidget;
     ILogManager *m_logManager;
+    IAuthManager *m_authManager;
     IDatabaseManager *m_databaseManager;
     IBaseEventBus *m_eventManager;
     QVariantMap m_config;
