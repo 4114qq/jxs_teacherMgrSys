@@ -7,6 +7,7 @@
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/ILogManager.h"
 #include "../../common/interfaces/IAuthManager.h"
+#include "../../common/interfaces/IHttpClientManager.h"
 
 class LogWidget;
 
@@ -31,13 +32,10 @@ public:
     IDatabaseManager *databaseManager() const override;
     ILogManager *logManager() const override;
     IAuthManager *authManager() const override;
+    IHttpClientManager *httpClientManager() const override;
     IConfigManager *configManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
-    QVariant getConfig(const QString &key, const QVariant &defaultValue) const override;
-    void setConfig(const QString &key, const QVariant &value) override;
-    bool loadConfig() override;
-    bool saveConfig() override;
 
     QWidget *widget() const override;
     QString widgetTitle() const override;
@@ -55,7 +53,6 @@ private:
     IAuthManager *m_authManager;
     IDatabaseManager *m_databaseManager;
     IBaseEventBus *m_eventManager;
-    QVariantMap m_config;
 };
 
 #endif // LOGUIPLUGIN_H

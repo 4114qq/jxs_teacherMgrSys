@@ -51,10 +51,8 @@ bool EventUIPlugin::initialize()
 
 bool EventUIPlugin::startPlugin()
 {
-    QVariant var = getConfig("eventManagerPtr", QVariant());
-    if (!var.isNull()) {
-        IBaseEventBus *eventMgr = static_cast<IBaseEventBus*>(var.value<void*>());
-        m_eventManager = eventMgr;
+    if (m_core) {
+        m_eventManager = m_core->eventManager();
     }
 
     if (!m_eventWidget) {
@@ -95,6 +93,11 @@ IAuthManager *EventUIPlugin::authManager() const
     return m_authManager;
 }
 
+IHttpClientManager *EventUIPlugin::httpClientManager() const
+{
+    return m_core->httpClientManager();
+}
+
 IConfigManager *EventUIPlugin::configManager() const
 {
     return nullptr;
@@ -103,26 +106,6 @@ IConfigManager *EventUIPlugin::configManager() const
 QStringList EventUIPlugin::dependencies() const
 {
     return QStringList() << "BaseCorePlugin";
-}
-
-QVariant EventUIPlugin::getConfig(const QString &key, const QVariant &defaultValue) const
-{
-    return m_config.value(key, defaultValue);
-}
-
-void EventUIPlugin::setConfig(const QString &key, const QVariant &value)
-{
-    m_config[key] = value;
-}
-
-bool EventUIPlugin::loadConfig()
-{
-    return true;
-}
-
-bool EventUIPlugin::saveConfig()
-{
-    return true;
 }
 
 QWidget *EventUIPlugin::widget() const

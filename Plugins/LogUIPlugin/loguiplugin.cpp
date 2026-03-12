@@ -79,6 +79,11 @@ IAuthManager *LogUIPlugin::authManager() const
     return m_authManager;
 }
 
+IHttpClientManager *LogUIPlugin::httpClientManager() const
+{
+    return m_core->httpClientManager();
+}
+
 IConfigManager *LogUIPlugin::configManager() const
 {
     return nullptr;
@@ -92,37 +97,6 @@ QStringList LogUIPlugin::dependencies() const
 QString LogUIPlugin::author() const
 {
     return "Developer";
-}
-
-QVariant LogUIPlugin::getConfig(const QString &key, const QVariant &defaultValue) const
-{
-    return m_config.value(key, defaultValue);
-}
-
-void LogUIPlugin::setConfig(const QString &key, const QVariant &value)
-{
-    m_config[key] = value;
-
-    if (key == "logManagerPtr") {
-        m_logManager = static_cast<ILogManager*>(value.value<void*>());
-        if (m_logWidget && m_logManager) {
-            m_logWidget->setLogManager(m_logManager);
-        }
-    } else if (key == "databaseManagerPtr") {
-        m_databaseManager = static_cast<IDatabaseManager*>(value.value<void*>());
-    } else if (key == "eventManagerPtr") {
-        m_eventManager = static_cast<IBaseEventBus*>(value.value<void*>());
-    }
-}
-
-bool LogUIPlugin::loadConfig()
-{
-    return true;
-}
-
-bool LogUIPlugin::saveConfig()
-{
-    return true;
 }
 
 QWidget *LogUIPlugin::widget() const

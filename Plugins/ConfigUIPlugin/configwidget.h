@@ -3,7 +3,7 @@
 
 #include "../../common/interfaces/IConfigManager.h"
 #include <QWidget>
-#include <QTableWidgetItem>
+#include <QTreeWidgetItem>
 
 namespace Ui {
 class ConfigWidget;
@@ -21,20 +21,17 @@ public:
 
 private slots:
     void onSaveConfig();
-    void onAddConfig();
-    void onEditConfig();
-    void onDeleteConfig();
     void onReloadConfig();
-    void onTableItemChanged(QTableWidgetItem *item);
+    void onAddGroup();
+    void onAddConfig();
+    void onTreeItemChanged(QTreeWidgetItem *item, int column);
 
 private:
     void initUI();
     void loadConfigToUI();
-    void saveUIToConfig();
 
     Ui::ConfigWidget *ui;
     IConfigManager *m_configManager;
-    bool m_isEditing;
 };
 
 #endif // CONFIGWIDGET_H

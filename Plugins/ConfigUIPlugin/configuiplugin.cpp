@@ -41,40 +41,12 @@ QString ConfigUIPlugin::author() const
     return "Your Name";
 }
 
-QVariant ConfigUIPlugin::getConfig(const QString &key, const QVariant &defaultValue) const
+void ConfigUIPlugin::setConfigManager(IConfigManager *configManager)
 {
-    if (m_configManager) {
-        return m_configManager->get(key, defaultValue);
+    m_configManager = configManager;
+    if (m_configWidget) {
+        m_configWidget->setConfigManager(m_configManager);
     }
-    return defaultValue;
-}
-
-void ConfigUIPlugin::setConfig(const QString &key, const QVariant &value)
-{
-    if (key == "configManagerPtr") {
-        m_configManager = static_cast<IConfigManager*>(value.value<void*>());
-        if (m_configWidget && m_configManager) {
-            m_configWidget->setConfigManager(m_configManager);
-        }
-    } else if (m_configManager) {
-        m_configManager->set(key, value);
-    }
-}
-
-bool ConfigUIPlugin::loadConfig()
-{
-    if (m_configManager) {
-        return m_configManager->load();
-    }
-    return false;
-}
-
-bool ConfigUIPlugin::saveConfig()
-{
-    if (m_configManager) {
-        return m_configManager->save();
-    }
-    return false;
 }
 
 bool ConfigUIPlugin::initialize()
@@ -82,14 +54,6 @@ bool ConfigUIPlugin::initialize()
     m_configWidget = new ConfigWidget();
     m_configWidget->setWindowFlags(Qt::Widget);
     return true;
-}
-
-void ConfigUIPlugin::setConfigManager(IConfigManager *configManager)
-{
-    m_configManager = configManager;
-    if (m_configWidget) {
-        m_configWidget->setConfigManager(m_configManager);
-    }
 }
 
 bool ConfigUIPlugin::startPlugin()
@@ -133,6 +97,11 @@ ILogManager *ConfigUIPlugin::logManager() const
 IAuthManager *ConfigUIPlugin::authManager() const
 {
     return m_authManager;
+}
+
+IHttpClientManager *ConfigUIPlugin::httpClientManager() const
+{
+    return m_core->httpClientManager();
 }
 
 IConfigManager *ConfigUIPlugin::configManager() const

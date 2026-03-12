@@ -1,4 +1,4 @@
-QT       += core sql
+QT       += core sql network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,6 +16,7 @@ SOURCES += \
     ConfigManager.cpp \
     DatabaseManager.cpp \
     EventManager.cpp \
+    HttpClientManager.cpp \
     LogManager.cpp \
     basecoreplugin.cpp
 
@@ -25,11 +26,13 @@ HEADERS += \
     ConfigManager.h \
     DatabaseManager.h \
     EventManager.h \
+    HttpClientManager.h \
     LogManager.h \
     basecoreplugin.h
 
 # Include common directory
 INCLUDEPATH += $$PWD/../../common
+include($$PWD/../../common/definitions/definitions.pri)
 
 # Default rules for deployment.
 unix {

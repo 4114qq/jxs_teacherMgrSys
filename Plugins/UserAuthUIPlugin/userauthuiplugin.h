@@ -7,6 +7,7 @@
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/IAuthManager.h"
 #include "../../common/interfaces/ILogManager.h"
+#include "../../common/interfaces/IHttpClientManager.h"
 
 class UserAuthWidget;
 
@@ -32,12 +33,9 @@ public:
     ILogManager *logManager() const override;
     IConfigManager *configManager() const override;
     IAuthManager *authManager() const override;
+    IHttpClientManager *httpClientManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
-    QVariant getConfig(const QString &key, const QVariant &defaultValue) const override;
-    void setConfig(const QString &key, const QVariant &value) override;
-    bool loadConfig() override;
-    bool saveConfig() override;
 
     QWidget *widget() const override;
     QString widgetTitle() const override;
@@ -56,7 +54,6 @@ private:
     ILogManager *m_logManager;
     IDatabaseManager *m_databaseManager;
     IConfigManager *m_configManager;
-    QVariantMap m_config;
 
 };
 

@@ -5,13 +5,15 @@
     "DatabaseUIPlugin",
     "LogUIPlugin",
     "EventUIPlugin",
-    "UserAuthUIPlugin"
+    "UserAuthUIPlugin",
+    "HttpDataUIPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
     "DatabaseUIPlugin": ["BaseCorePlugin"],
     "LogUIPlugin": ["BaseCorePlugin"],
     "EventUIPlugin": ["BaseCorePlugin"],
-    "UserAuthUIPlugin": ["BaseCorePlugin"]
+    "UserAuthUIPlugin": ["BaseCorePlugin"],
+    "HttpDataUIPlugin": ["BaseCorePlugin"]
   }
 }

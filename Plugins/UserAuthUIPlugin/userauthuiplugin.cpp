@@ -94,55 +94,14 @@ IAuthManager *UserAuthUIPlugin::authManager() const
     return m_authManager;
 }
 
+IHttpClientManager *UserAuthUIPlugin::httpClientManager() const
+{
+    return m_core->httpClientManager();
+}
+
 QStringList UserAuthUIPlugin::dependencies() const
 {
     return QStringList() << "BaseCorePlugin";
-}
-
-QVariant UserAuthUIPlugin::getConfig(const QString &key, const QVariant &defaultValue) const
-{
-    return m_config.value(key, defaultValue);
-}
-
-void UserAuthUIPlugin::setConfig(const QString &key, const QVariant &value)
-{
-    if (key == "BaseCorePlugin") {
-        IBasePlugin *baseCore = static_cast<IBasePlugin*>(value.value<void*>());
-        if (baseCore) {
-            m_authManager = baseCore->authManager();
-            m_logManager = baseCore->logManager();
-            if (m_userAuthWidget) {
-                if (m_authManager) {
-                    m_userAuthWidget->setAuthManager(m_authManager);
-                }
-                if (m_logManager) {
-                    m_userAuthWidget->setLogManager(m_logManager);
-                }
-            }
-        }
-    } else if (key == "authManagerPtr") {
-        m_authManager = static_cast<IAuthManager*>(value.value<void*>());
-        if (m_userAuthWidget && m_authManager) {
-            m_userAuthWidget->setAuthManager(m_authManager);
-        }
-    } else if (key == "logManagerPtr") {
-        m_logManager = static_cast<ILogManager*>(value.value<void*>());
-        if (m_userAuthWidget && m_logManager) {
-            m_userAuthWidget->setLogManager(m_logManager);
-        }
-    } else {
-        m_config[key] = value;
-    }
-}
-
-bool UserAuthUIPlugin::loadConfig()
-{
-    return true;
-}
-
-bool UserAuthUIPlugin::saveConfig()
-{
-    return true;
 }
 
 QWidget *UserAuthUIPlugin::widget() const

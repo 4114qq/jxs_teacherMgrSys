@@ -80,6 +80,11 @@ IAuthManager *DatabaseUIPlugin::authManager() const
     return m_authManager;
 }
 
+IHttpClientManager *DatabaseUIPlugin::httpClientManager() const
+{
+    return m_core->httpClientManager();
+}
+
 IConfigManager *DatabaseUIPlugin::configManager() const
 {
     return nullptr;
@@ -93,35 +98,6 @@ QStringList DatabaseUIPlugin::dependencies() const
 QString DatabaseUIPlugin::author() const
 {
     return "Developer";
-}
-
-QVariant DatabaseUIPlugin::getConfig(const QString &key, const QVariant &defaultValue) const
-{
-    return m_config.value(key, defaultValue);
-}
-
-void DatabaseUIPlugin::setConfig(const QString &key, const QVariant &value)
-{
-    m_config[key] = value;
-
-    if (key == "databaseManagerPtr") {
-        m_databaseManager = static_cast<IDatabaseManager*>(value.value<void*>());
-        if (m_databaseWidget && m_databaseManager) {
-            m_databaseWidget->setDatabaseManager(m_databaseManager);
-        }
-    } else if (key == "eventManagerPtr") {
-        m_eventManager = static_cast<IBaseEventBus*>(value.value<void*>());
-    }
-}
-
-bool DatabaseUIPlugin::loadConfig()
-{
-    return true;
-}
-
-bool DatabaseUIPlugin::saveConfig()
-{
-    return true;
 }
 
 QWidget *DatabaseUIPlugin::widget() const

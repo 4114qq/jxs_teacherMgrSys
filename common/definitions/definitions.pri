@@ -1,0 +1,1 @@
+DEFINITIONS += $$PWD/HttpDataStructures.h

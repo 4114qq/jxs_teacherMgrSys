@@ -6,9 +6,9 @@
 #include "IConfigManager.h"
 #include "ILogManager.h"
 #include "IAuthManager.h"
+#include "IHttpClientManager.h"
 #include <QObject>
 #include <QString>
-#include <QVariant>
 #include <QWidget>
 
 class IBasePlugin
@@ -26,15 +26,11 @@ public:
     virtual bool stopPlugin() = 0;
     virtual void cleanup() = 0;
 
-    virtual QVariant getConfig(const QString &key, const QVariant &defaultValue = QVariant()) const = 0;
-    virtual void setConfig(const QString &key, const QVariant &value) = 0;
-    virtual bool loadConfig() = 0;
-    virtual bool saveConfig() = 0;
-
     virtual IBaseEventBus *eventManager() const = 0;
     virtual IDatabaseManager *databaseManager() const = 0;
     virtual ILogManager *logManager() const = 0;
     virtual IAuthManager *authManager() const = 0;
+    virtual IHttpClientManager *httpClientManager() const = 0;
     virtual IConfigManager *configManager() const = 0;
     virtual QStringList dependencies() const = 0;
 

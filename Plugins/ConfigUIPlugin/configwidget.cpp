@@ -4,13 +4,11 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QInputDialog>
-#include <QHeaderView>
 
 ConfigWidget::ConfigWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ConfigWidget)
     , m_configManager(nullptr)
-    , m_isEditing(false)
 {
     ui->setupUi(this);
     initUI();
@@ -31,17 +29,18 @@ void ConfigWidget::setConfigManager(IConfigManager *configManager)
 
 void ConfigWidget::initUI()
 {
-    ui->tableWidget->setColumnCount(3);
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << QString::fromLocal8Bit("Key") << QString::fromLocal8Bit("Value") << QString::fromLocal8Bit("Description"));
-    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-    ui->tableWidget->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    ui->tableWidget->setAlternatingRowColors(true);
+    ui->treeWidget->setColumnCount(3);
+    ui->treeWidget->setHeaderLabels(QStringList() << QString::fromLocal8Bit("配置项") << QString::fromLocal8Bit("值") << QString::fromLocal8Bit("描述"));
+    ui->treeWidget->header()->setStretchLastSection(true);
+    ui->treeWidget->setEditTriggers(QAbstractItemView::AllEditTriggers);
+    ui->treeWidget->setAlternatingRowColors(true);
 
-    connect(ui->btnAdd, &QPushButton::clicked, this, &ConfigWidget::onAddConfig);
-    connect(ui->btnEdit, &QPushButton::clicked, this, &ConfigWidget::onEditConfig);
-    connect(ui->btnDelete, &QPushButton::clicked, this, &ConfigWidget::onDeleteConfig);
     connect(ui->btnReload, &QPushButton::clicked, this, &ConfigWidget::onReloadConfig);
-    connect(ui->tableWidget, &QTableWidget::itemChanged, this, &ConfigWidget::onTableItemChanged);
+    connect(ui->btnAddGroup, &QPushButton::clicked, this, &ConfigWidget::onAddGroup);
+    connect(ui->btnAddConfig, &QPushButton::clicked, this, &ConfigWidget::onAddConfig);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ConfigWidget::onSaveConfig);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &ConfigWidget::close);
+    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &ConfigWidget::onTreeItemChanged);
 }
 
 void ConfigWidget::loadConfigToUI()
@@ -50,17 +49,29 @@ void ConfigWidget::loadConfigToUI()
         return;
     }
 
-    ui->tableWidget->blockSignals(true);
-    ui->tableWidget->setRowCount(0);
+    ui->treeWidget->blockSignals(true);
+    ui->treeWidget->clear();
 
     QList<ConfigItem> items = m_configManager->getConfigItems();
-    for (const ConfigItem &item : items) {
-        int row = ui->tableWidget->rowCount();
-        ui->tableWidget->insertRow(row);
+    QMap<QString, QTreeWidgetItem*> groupMap;
 
-        QTableWidgetItem *keyItem = new QTableWidgetItem(item.key);
-        keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
-        ui->tableWidget->setItem(row, 0, keyItem);
+    for (const ConfigItem &item : items) {
+        QString groupName = item.group.isEmpty() ? "General" : item.group;
+
+        QTreeWidgetItem *groupItem;
+        if (groupMap.contains(groupName)) {
+            groupItem = groupMap[groupName];
+        } else {
+            groupItem = new QTreeWidgetItem(ui->treeWidget);
+            groupItem->setText(0, groupName);
+            groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
+            groupMap[groupName] = groupItem;
+            ui->treeWidget->addTopLevelItem(groupItem);
+        }
+
+        QTreeWidgetItem *childItem = new QTreeWidgetItem(groupItem);
+        childItem->setText(0, item.key);
+        childItem->setFlags(childItem->flags() | Qt::ItemIsEditable);
 
         QString valueStr;
         if (item.type == "bool") {
@@ -70,206 +81,176 @@ void ConfigWidget::loadConfigToUI()
         } else {
             valueStr = item.value.toString();
         }
-        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(valueStr));
-        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(item.description));
+        childItem->setText(1, valueStr);
+        childItem->setText(2, item.description);
+
+        childItem->setData(0, Qt::UserRole, item.key);
+        childItem->setData(1, Qt::UserRole, item.type);
+        childItem->setData(2, Qt::UserRole, item.group);
+
+        groupItem->addChild(childItem);
     }
 
-    ui->tableWidget->blockSignals(false);
-}
-
-void ConfigWidget::saveUIToConfig()
-{
-    if (!m_configManager) {
-        return;
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        ui->treeWidget->topLevelItem(i)->setExpanded(true);
     }
 
-    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
-        ConfigItem item;
-        item.key = ui->tableWidget->item(row, 0)->text();
-        item.description = ui->tableWidget->item(row, 2)->text();
-
-        QString valueStr = ui->tableWidget->item(row, 1)->text();
-
-        if (valueStr.toLower() == "true" || valueStr.toLower() == "false") {
-            item.value = (valueStr.toLower() == "true");
-            item.type = "bool";
-        } else {
-            bool ok;
-            int intValue = valueStr.toInt(&ok);
-            if (ok) {
-                item.value = intValue;
-                item.type = "int";
-            } else {
-                double doubleValue = valueStr.toDouble(&ok);
-                if (ok) {
-                    item.value = doubleValue;
-                    item.type = "double";
-                } else {
-                    item.value = valueStr;
-                    item.type = "string";
-                }
-            }
-        }
-
-        m_configManager->updateConfigItem(item);
-    }
+    ui->treeWidget->blockSignals(false);
 }
 
 void ConfigWidget::onSaveConfig()
 {
     if (!m_configManager) {
-        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
         return;
     }
 
-    saveUIToConfig();
-    if (m_configManager->save()) {
-        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置保存成功"));
-    } else {
-        QMessageBox::critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置保存失败"));
-    }
-}
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        QTreeWidgetItem *groupItem = ui->treeWidget->topLevelItem(i);
+        QString groupName = groupItem->text(0);
 
-void ConfigWidget::onAddConfig()
-{
-    if (!m_configManager) {
-        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
-        return;
-    }
-
-    bool ok;
-    QString key = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Key:"), QLineEdit::Normal, "", &ok);
-    if (!ok || key.isEmpty()) {
-        return;
-    }
-
-    if (m_configManager->contains(key)) {
-        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Key 已存在"));
-        return;
-    }
-
-    QString value = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Value:"), QLineEdit::Normal, "", &ok);
-    if (!ok) {
-        return;
-    }
-
-    QString description = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("Description (描述):"), QLineEdit::Normal, "", &ok);
-    if (!ok) {
-        return;
-    }
-
-    ConfigItem item;
-    item.key = key;
-    item.description = description;
-
-    if (value.toLower() == "true" || value.toLower() == "false") {
-        item.value = (value.toLower() == "true");
-        item.type = "bool";
-    } else {
-        bool isInt;
-        int intValue = value.toInt(&isInt);
-        if (isInt) {
-            item.value = intValue;
-            item.type = "int";
-        } else {
-            bool isDouble;
-            double doubleValue = value.toDouble(&isDouble);
-            if (isDouble) {
-                item.value = doubleValue;
-                item.type = "double";
-            } else {
-                item.value = value;
-                item.type = "string";
+        for (int j = 0; j < groupItem->childCount(); ++j) {
+            QTreeWidgetItem *item = groupItem->child(j);
+            QString key = item->data(0, Qt::UserRole).toString();
+            if (key.isEmpty()) {
+                key = item->text(0);
             }
+            if (key.isEmpty()) {
+                continue;
+            }
+            QString value = item->text(1);
+            QString description = item->text(2);
+            QString actualGroup = groupName == "General" ? "" : groupName;
+
+            ConfigItem configItem;
+            configItem.key = key;
+            configItem.group = actualGroup;
+            configItem.value = value;
+            configItem.description = description;
+            configItem.type = item->data(1, Qt::UserRole).toString();
+            m_configManager->updateConfigItem(configItem);
         }
     }
 
-    m_configManager->addConfigItem(item);
-    loadConfigToUI();
-}
-
-void ConfigWidget::onEditConfig()
-{
-    int currentRow = ui->tableWidget->currentRow();
-    if (currentRow < 0) {
-        QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请选择要编辑的行"));
-        return;
-    }
-
-    ui->tableWidget->editItem(ui->tableWidget->item(currentRow, 1));
-}
-
-void ConfigWidget::onDeleteConfig()
-{
-    int currentRow = ui->tableWidget->currentRow();
-    if (currentRow < 0) {
-        QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("请选择要删除的行"));
-        return;
-    }
-
-    QString key = ui->tableWidget->item(currentRow, 0)->text();
-    if (QMessageBox::question(this, QString::fromLocal8Bit("确认"), QString::fromLocal8Bit("确定要删除配置项 [%1] 吗？").arg(key)) == QMessageBox::Yes) {
-        m_configManager->deleteConfigItem(key);
-        loadConfigToUI();
+    if (m_configManager->save()) {
+        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置保存成功!"));
+    } else {
+        QMessageBox::warning(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置保存失败!"));
     }
 }
 
 void ConfigWidget::onReloadConfig()
 {
-    if (!m_configManager) {
-        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("配置管理器未初始化"));
-        return;
-    }
-
     if (m_configManager->reload()) {
         loadConfigToUI();
-        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置重新加载成功"));
+        QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置重新加载成功!"));
     } else {
-        QMessageBox::critical(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置重新加载失败"));
+        QMessageBox::warning(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置重新加载失败!"));
     }
 }
 
-void ConfigWidget::onTableItemChanged(QTableWidgetItem *item)
+void ConfigWidget::onTreeItemChanged(QTreeWidgetItem *item, int column)
 {
-    if (!m_configManager || m_isEditing) {
+    if (!item || !item->parent()) {
         return;
     }
 
-    int row = item->row();
-    int col = item->column();
-    if (col != 1) {
+    QString key = item->data(0, Qt::UserRole).toString();
+    QString group = item->data(2, Qt::UserRole).toString();
+
+    if (!m_configManager) {
         return;
     }
-
-    QString key = ui->tableWidget->item(row, 0)->text();
-    QString value = item->text();
-    QString description = ui->tableWidget->item(row, 2)->text();
 
     ConfigItem configItem;
     configItem.key = key;
-    configItem.description = description;
+    configItem.group = group;
 
-    if (value.toLower() == "true" || value.toLower() == "false") {
-        configItem.value = (value.toLower() == "true");
-        configItem.type = "bool";
-    } else {
-        bool isInt;
-        int intValue = value.toInt(&isInt);
-        if (isInt) {
-            configItem.value = intValue;
-            configItem.type = "int";
-        } else {
-            bool isDouble;
-            double doubleValue = value.toDouble(&isDouble);
-            if (isDouble) {
-                configItem.value = doubleValue;
-                configItem.type = "double";
-            } else {
-                configItem.value = value;
-                configItem.type = "string";
+    if (column == 1) {
+        QString value = item->text(1);
+        configItem.value = value;
+    } else if (column == 2) {
+        QString description = item->text(2);
+        configItem.description = description;
+        QList<ConfigItem> items = m_configManager->getConfigItems();
+        for (const auto &existing : items) {
+            if (existing.key == key && existing.group == group) {
+                configItem.value = existing.value;
+                configItem.type = existing.type;
+                break;
             }
         }
     }
 
     m_configManager->updateConfigItem(configItem);
+}
+
+void ConfigWidget::onAddGroup()
+{
+    bool ok;
+    QString groupName = QInputDialog::getText(this, QString::fromLocal8Bit("添加分组"), QString::fromLocal8Bit("分组名称:"), QLineEdit::Normal, "", &ok);
+    if (!ok || groupName.isEmpty()) {
+        return;
+    }
+
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        if (ui->treeWidget->topLevelItem(i)->text(0) == groupName) {
+            QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("分组已存在!"));
+            return;
+        }
+    }
+
+    QTreeWidgetItem *groupItem = new QTreeWidgetItem(ui->treeWidget);
+    groupItem->setText(0, groupName);
+    groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
+    ui->treeWidget->addTopLevelItem(groupItem);
+    groupItem->setExpanded(true);
+}
+
+void ConfigWidget::onAddConfig()
+{
+    bool ok;
+    QString key = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("配置项:"), QLineEdit::Normal, "", &ok);
+    if (!ok || key.isEmpty()) {
+        return;
+    }
+
+    QString value = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("值:"), QLineEdit::Normal, "", &ok);
+    if (!ok) {
+        return;
+    }
+
+    QString groupName = "General";
+    QTreeWidgetItem *selectedItem = ui->treeWidget->currentItem();
+    if (selectedItem) {
+        if (selectedItem->parent()) {
+            groupName = selectedItem->parent()->text(0);
+        } else {
+            groupName = selectedItem->text(0);
+        }
+    }
+
+    QTreeWidgetItem *groupItem = nullptr;
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
+        if (ui->treeWidget->topLevelItem(i)->text(0) == groupName) {
+            groupItem = ui->treeWidget->topLevelItem(i);
+            break;
+        }
+    }
+
+    if (!groupItem) {
+        groupItem = new QTreeWidgetItem(ui->treeWidget);
+        groupItem->setText(0, groupName);
+        groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
+        ui->treeWidget->addTopLevelItem(groupItem);
+    }
+
+    QTreeWidgetItem *childItem = new QTreeWidgetItem(groupItem);
+    childItem->setText(0, key);
+    childItem->setText(1, value);
+    childItem->setFlags(childItem->flags() | Qt::ItemIsEditable);
+    childItem->setData(0, Qt::UserRole, key);
+    childItem->setData(1, Qt::UserRole, "string");
+    childItem->setData(2, Qt::UserRole, groupName == "General" ? "" : groupName);
+    groupItem->addChild(childItem);
+    groupItem->setExpanded(true);
 }

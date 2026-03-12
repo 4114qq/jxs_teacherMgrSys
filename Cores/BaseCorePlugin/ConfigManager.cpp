@@ -35,8 +35,17 @@ QVariant ConfigManager::get(const QString &key, const QVariant &defaultValue) co
 {
     QMutexLocker locker(&m_mutex);
 
+    QString group, actualKey;
+    if (key.contains('.')) {
+        int pos = key.lastIndexOf('.');
+        group = key.mid(0, pos);
+        actualKey = key.mid(pos + 1);
+    } else {
+        actualKey = key;
+    }
+
     for (const auto &item : m_configItems) {
-        if (item.key == key) {
+        if (item.key == actualKey && item.group == group) {
             return item.value;
         }
     }
@@ -47,8 +56,17 @@ void ConfigManager::set(const QString &key, const QVariant &value)
 {
     QMutexLocker locker(&m_mutex);
 
+    QString group, actualKey;
+    if (key.contains('.')) {
+        int pos = key.lastIndexOf('.');
+        group = key.mid(0, pos);
+        actualKey = key.mid(pos + 1);
+    } else {
+        actualKey = key;
+    }
+
     for (auto &item : m_configItems) {
-        if (item.key == key) {
+        if (item.key == actualKey && item.group == group) {
             item.value = value.toString();
             notifyWatchers(key, value);
             emit configChanged(key, value);
@@ -62,11 +80,21 @@ void ConfigManager::setMultiple(const QVariantMap &map)
     QMutexLocker locker(&m_mutex);
 
     for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
+        QString key = it.key();
+        QString group, actualKey;
+        if (key.contains('.')) {
+            int pos = key.lastIndexOf('.');
+            group = key.mid(0, pos);
+            actualKey = key.mid(pos + 1);
+        } else {
+            actualKey = key;
+        }
+
         for (auto &item : m_configItems) {
-            if (item.key == it.key()) {
+            if (item.key == actualKey && item.group == group) {
                 item.value = it.value().toString();
-                notifyWatchers(it.key(), it.value());
-                emit configChanged(it.key(), it.value());
+                notifyWatchers(key, it.value());
+                emit configChanged(key, it.value());
                 break;
             }
         }
@@ -87,8 +115,17 @@ bool ConfigManager::contains(const QString &key) const
 {
     QMutexLocker locker(&m_mutex);
 
+    QString group, actualKey;
+    if (key.contains('.')) {
+        int pos = key.lastIndexOf('.');
+        group = key.mid(0, pos);
+        actualKey = key.mid(pos + 1);
+    } else {
+        actualKey = key;
+    }
+
     for (const auto &item : m_configItems) {
-        if (item.key == key) {
+        if (item.key == actualKey && item.group == group) {
             return true;
         }
     }
@@ -99,8 +136,17 @@ void ConfigManager::remove(const QString &key)
 {
     QMutexLocker locker(&m_mutex);
 
+    QString group, actualKey;
+    if (key.contains('.')) {
+        int pos = key.lastIndexOf('.');
+        group = key.mid(0, pos);
+        actualKey = key.mid(pos + 1);
+    } else {
+        actualKey = key;
+    }
+
     for (int i = 0; i < m_configItems.size(); ++i) {
-        if (m_configItems[i].key == key) {
+        if (m_configItems[i].key == actualKey && m_configItems[i].group == group) {
             m_configItems.removeAt(i);
             m_watchers.remove(key);
             return;
@@ -160,6 +206,16 @@ bool ConfigManager::load(const QString &filePath)
     QJsonObject obj = doc.object();
     m_configItems.clear();
 
+    parseJsonObject(obj, QString());
+
+    if (m_logManager) {
+        m_logManager->logInfo("ConfigManager", QString("Config loaded from: %1 with %2 items").arg(path).arg(m_configItems.size()));
+    }
+    return true;
+}
+
+void ConfigManager::parseJsonObject(const QJsonObject &obj, const QString &group)
+{
     QStringList keys = obj.keys();
     for (const QString &fullKey : keys) {
         if (fullKey.endsWith("_note")) {
@@ -170,8 +226,15 @@ bool ConfigManager::load(const QString &filePath)
         QString noteKey = fullKey + "_note";
         QString description = obj.contains(noteKey) ? obj[noteKey].toString() : QString();
 
+        if (value.isObject()) {
+            QString newGroup = group.isEmpty() ? fullKey : group + "." + fullKey;
+            parseJsonObject(value.toObject(), newGroup);
+            continue;
+        }
+
         ConfigItem item;
         item.key = fullKey;
+        item.group = group;
         item.description = description;
 
         if (value.isString()) {
@@ -197,10 +260,19 @@ bool ConfigManager::load(const QString &filePath)
         m_configItems.append(item);
     }
 
-    if (m_logManager) {
-        m_logManager->logInfo("ConfigManager", QString("Config loaded from: %1 with %2 items").arg(path).arg(m_configItems.size()));
+    if (group.isEmpty()) {
+        return;
     }
-    return true;
+
+    QString groupNoteKey = group.split(".").last() + "_note";
+    if (obj.contains(groupNoteKey)) {
+        QString groupDescription = obj[groupNoteKey].toString();
+        for (auto &item : m_configItems) {
+            if (item.group == group && item.description.isEmpty()) {
+                item.description = groupDescription;
+            }
+        }
+    }
 }
 
 bool ConfigManager::save(const QString &filePath)
@@ -231,8 +303,28 @@ bool ConfigManager::save(const QString &filePath)
         return false;
     }
 
+    QJsonObject rootObj = buildJsonObject();
+
+    QJsonDocument doc(rootObj);
+    file.write(doc.toJson(QJsonDocument::Indented));
+    file.close();
+
+    if (m_logManager) {
+        m_logManager->logInfo("ConfigManager", QString("Config saved to: %1").arg(path));
+    }
+    return true;
+}
+
+QJsonObject ConfigManager::buildJsonObject() const
+{
     QJsonObject rootObj;
+    QMap<QString, QJsonObject> groups;
+
     for (const auto &item : m_configItems) {
+        if (item.key.isEmpty()) {
+            continue;
+        }
+
         QJsonValue value;
         if (item.type == "bool") {
             value = item.value.toBool();
@@ -243,21 +335,54 @@ bool ConfigManager::save(const QString &filePath)
         } else {
             value = item.value.toString();
         }
-        rootObj[item.key] = value;
 
-        if (!item.description.isEmpty()) {
-            rootObj[item.key + "_note"] = item.description;
+        if (item.group.isEmpty()) {
+            rootObj[item.key] = value;
+            if (!item.description.isEmpty()) {
+                rootObj[item.key + "_note"] = item.description;
+            }
+        } else {
+            if (!groups.contains(item.group)) {
+                groups[item.group] = QJsonObject();
+            }
+
+            QJsonObject groupObj = groups[item.group];
+            groupObj[item.key] = value;
+            if (!item.description.isEmpty()) {
+                groupObj[item.key + "_note"] = item.description;
+            }
+            groups[item.group] = groupObj;
         }
     }
 
-    QJsonDocument doc(rootObj);
-    file.write(doc.toJson(QJsonDocument::Indented));
-    file.close();
+    for (auto it = groups.constBegin(); it != groups.constEnd(); ++it) {
+        QString groupName = it.key();
+        QJsonObject groupData = it.value();
 
-    if (m_logManager) {
-        m_logManager->logInfo("ConfigManager", QString("Config saved to: %1").arg(path));
+        QStringList parts = groupName.split(".");
+        QJsonObject nestedObj = groupData;
+
+        for (int i = parts.size() - 1; i >= 0; --i) {
+            QJsonObject wrapper;
+            wrapper[parts[i]] = nestedObj;
+            nestedObj = wrapper;
+        }
+
+        for (auto key : nestedObj.keys()) {
+            if (!rootObj.contains(key)) {
+                rootObj[key] = nestedObj[key];
+            } else {
+                QJsonObject existing = rootObj[key].toObject();
+                QJsonObject toMerge = nestedObj[key].toObject();
+                for (auto mergeKey : toMerge.keys()) {
+                    existing[mergeKey] = toMerge[mergeKey];
+                }
+                rootObj[key] = existing;
+            }
+        }
     }
-    return true;
+
+    return rootObj;
 }
 
 bool ConfigManager::reload()
@@ -410,13 +535,27 @@ void ConfigManager::updateConfigItem(const ConfigItem &item)
 {
     QMutexLocker locker(&m_mutex);
 
+    if (item.key.isEmpty()) {
+        return;
+    }
+
+    QString group = item.group;
+    QString actualKey = item.key;
+
     for (auto &existingItem : m_configItems) {
-        if (existingItem.key == item.key) {
-            existingItem = item;
-            emit configChanged(item.key, item.value);
+        if (existingItem.key == actualKey && existingItem.group == group) {
+            existingItem.value = item.value;
+            existingItem.description = item.description;
+            if (!item.type.isEmpty()) {
+                existingItem.type = item.type;
+            }
+            QString fullKey = group.isEmpty() ? actualKey : group + "." + actualKey;
+            emit configChanged(fullKey, existingItem.value);
             return;
         }
     }
+
+    m_configItems.append(item);
 }
 
 void ConfigManager::deleteConfigItem(const QString &key)

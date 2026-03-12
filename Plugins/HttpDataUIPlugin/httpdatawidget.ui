@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HttpDataWidget</class>
+ <widget class="QWidget" name="HttpDataWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>HTTP数据管理</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="serverGroup">
+     <property name="title">
+      <string>服务器配置</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelIp">
+        <property name="text">
+         <string>服务器地址:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="serverIpEdit">
+        <property name="text">
+         <string>192.168.1.10</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="labelPort">
+        <property name="text">
+         <string>端口:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QSpinBox" name="serverPortSpin">
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+        <property name="value">
+         <number>8094</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QPushButton" name="btnTestConnection">
+        <property name="text">
+         <string>连接测试</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelToken">
+        <property name="text">
+         <string>Token:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="3">
+       <widget class="QLineEdit" name="tokenEdit">
+        <property name="text">
+         <string>6000-0002-4561-3953</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QPushButton" name="btnSaveConfig">
+        <property name="text">
+         <string>保存配置</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelTimeout">
+        <property name="text">
+         <string>超时时间(秒):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="timeoutSpin">
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="labelStatus">
+        <property name="text">
+         <string>状态:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="statusLabel">
+        <property name="text">
+         <string>未连接</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: red;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabCourse">
+      <attribute name="title">
+       <string>课程管理</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QTextEdit" name="courseTextEdit">
+         <property name="placeholderText">
+          <string>在此输入或编辑课程JSON数据...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QPushButton" name="btnCourseAdd">
+           <property name="text">
+            <string>新建</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnCourseFetch">
+           <property name="text">
+            <string>从服务器获取</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnCourseUpload">
+           <property name="text">
+            <string>上传到服务器</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabEquipment">
+      <attribute name="title">
+       <string>设备管理</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QTextEdit" name="equipmentTextEdit">
+         <property name="placeholderText">
+          <string>在此输入或编辑设备线路JSON数据...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="btnEquipmentAdd">
+           <property name="text">
+            <string>新建</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnEquipmentFetch">
+           <property name="text">
+            <string>从服务器获取</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnEquipmentUpload">
+           <property name="text">
+            <string>上传到服务器</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabLog">
+      <attribute name="title">
+       <string>请求日志</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QTextEdit" name="logTextEdit">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="placeholderText">
+          <string>请求日志将显示在这里...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>btnTestConnection</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onTestConnectionClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>670</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnSaveConfig</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onSaveConfigClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>670</x>
+     <y>70</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnCourseFetch</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onCourseFetchClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>280</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnCourseUpload</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onCourseUploadClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>380</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnEquipmentFetch</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onEquipmentFetchClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>280</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnEquipmentUpload</sender>
+   <signal>clicked()</signal>
+   <receiver>HttpDataWidget</receiver>
+   <slot>onEquipmentUploadClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>380</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

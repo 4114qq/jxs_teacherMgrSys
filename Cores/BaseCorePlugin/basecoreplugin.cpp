@@ -1,18 +1,19 @@
 #include "basecoreplugin.h"
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/ILogManager.h"
+#include "../../common/interfaces/IHttpClientManager.h"
 #include "EventManager.h"
 #include <QWidget>
 
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
-    m_pluginWidget(nullptr),
     m_core(this),
     m_eventManager(new CoreEventBus()),
     m_databaseManager(new DatabaseManager(this)),
     m_logManager(new LogManager(this)),
     m_configManager(new ConfigManager(this)),
-    m_authManager(new AuthManager(this))
+    m_authManager(new AuthManager(this)),
+    m_httpClientManager(new HttpClientManager(this))
 {
 }
 
@@ -47,21 +48,20 @@ bool BaseCorePlugin::initialize()
         m_configManager->setLogManager(m_logManager);
         m_configManager->load();
     }
-    loadConfig();
     return true;
 }
 
 bool BaseCorePlugin::startPlugin()
 {
     if (m_configManager) {
-        QString dbType = m_configManager->get("Database_Type", "MySQL").toString();
-        QString dbHost = m_configManager->get("Database_Host", "localhost").toString();
-        int dbPort = m_configManager->get("Database_Port", 3306).toInt();
-        QString dbName = m_configManager->get("Database_Name", "testdb").toString();
-        QString dbUser = m_configManager->get("Database_User", "root").toString();
-        QString dbPassword = m_configManager->get("Database_Password", "").toString();
-
         if (m_databaseManager) {
+            QString dbType = m_configManager->get("Database.Type", "MySQL").toString();
+            QString dbHost = m_configManager->get("Database.Host", "localhost").toString();
+            int dbPort = m_configManager->get("Database.Port", 3306).toInt();
+            QString dbName = m_configManager->get("Database.Name", "testdb").toString();
+            QString dbUser = m_configManager->get("Database.User", "root").toString();
+            QString dbPassword = m_configManager->get("Database.Password", "").toString();
+
             m_databaseManager->setLogManager(m_logManager);
             m_databaseManager->setDatabaseType(dbType);
             m_databaseManager->connect(dbHost, dbPort, dbName, dbUser, dbPassword);
@@ -72,7 +72,7 @@ bool BaseCorePlugin::startPlugin()
         }
 
         if (m_logManager) {
-            QString logLevelStr = m_configManager->get("Log_Level", "info").toString();
+            QString logLevelStr = m_configManager->get("Log.Level", "info").toString();
             LogLevel logLevel = LogLevel::INFO;
             if (logLevelStr.toLower() == "debug") {
                 logLevel = LogLevel::DEBUG;
@@ -83,8 +83,21 @@ bool BaseCorePlugin::startPlugin()
             }
             m_logManager->setLogLevel(logLevel);
 
-            QString logPath = m_configManager->get("Log_Path", "./logs").toString();
+            QString logPath = m_configManager->get("Log.Path", "./logs").toString();
             m_logManager->setLogFilePath(logPath);
+        }
+
+        if (m_httpClientManager) {
+            QString httpIp = m_configManager->get("HTTP.IP", "192.168.1.10").toString();
+            int httpPort = m_configManager->get("HTTP.Port", 8094).toInt();
+            int httpTimeout = m_configManager->get("HTTP.Timeout", 30).toInt();
+            QString httpToken = m_configManager->get("HTTP.Token", "").toString();
+
+            m_httpClientManager->setServerUrl(httpIp, httpPort);
+            m_httpClientManager->setTimeout(httpTimeout);
+            if (!httpToken.isEmpty()) {
+                m_httpClientManager->setToken(httpToken);
+            }
         }
     }
     return true;
@@ -100,35 +113,6 @@ void BaseCorePlugin::cleanup()
     if (m_databaseManager) {
         m_databaseManager->disconnect();
     }
-    saveConfig();
-}
-
-QVariant BaseCorePlugin::getConfig(const QString &key, const QVariant &defaultValue) const
-{
-    if (m_config.contains(key)) {
-        return m_config[key];
-    }
-    return defaultValue;
-}
-
-void BaseCorePlugin::setConfig(const QString &key, const QVariant &value)
-{
-    m_config[key] = value;
-}
-
-bool BaseCorePlugin::loadConfig()
-{
-    m_config["enabled"] = true;
-    m_config["logLevel"] = "info";
-    return true;
-}
-
-bool BaseCorePlugin::saveConfig()
-{
-    if (m_configManager) {
-        m_configManager->save();
-    }
-    return true;
 }
 
 IBaseEventBus *BaseCorePlugin::eventManager() const
@@ -154,6 +138,11 @@ ILogManager *BaseCorePlugin::logManager() const
 IAuthManager *BaseCorePlugin::authManager() const
 {
     return m_authManager;
+}
+
+IHttpClientManager *BaseCorePlugin::httpClientManager() const
+{
+    return m_httpClientManager;
 }
 
 IConfigManager *BaseCorePlugin::configManager() const

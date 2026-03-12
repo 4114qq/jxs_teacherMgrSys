@@ -10,6 +10,7 @@
 
 struct ConfigItem {
     QString key;
+    QString group;
     QVariant value;
     QString description;
     QString type;

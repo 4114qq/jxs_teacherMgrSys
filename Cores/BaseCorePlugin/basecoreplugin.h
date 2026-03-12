@@ -7,6 +7,8 @@
 #include "ConfigManager.h"
 #include "LogManager.h"
 #include "AuthManager.h"
+#include "HttpClientManager.h"
+#include "../../common/interfaces/IHttpClientManager.h"
 
 /**
  * @brief 基础核心插件
@@ -32,11 +34,6 @@ public:
     bool stopPlugin() override;
     void cleanup() override;
 
-    QVariant getConfig(const QString &key, const QVariant &defaultValue = QVariant()) const override;
-    void setConfig(const QString &key, const QVariant &value) override;
-    bool loadConfig() override;
-    bool saveConfig() override;
-
     IBaseEventBus *eventManager() const override;
 
     IDatabaseManager *databaseManager() const override;
@@ -47,22 +44,19 @@ public:
 
     ILogManager *logManager() const override;
     IAuthManager *authManager() const override;
+    IHttpClientManager *httpClientManager() const override;
 
     void setCore(IBasePlugin *core) override;
     IBasePlugin *core() const override;
 
 private:
-    // 内部类实现 IPluginWidget
-    class PluginWidgetImpl;
-    PluginWidgetImpl *m_pluginWidget;
-
     IBasePlugin *m_core;
-    QMap<QString, QVariant> m_config;
     IBaseEventBus *m_eventManager;
     mutable DatabaseManager *m_databaseManager;
     mutable LogManager *m_logManager;
     mutable ConfigManager *m_configManager;
     mutable AuthManager *m_authManager;
+    mutable HttpClientManager *m_httpClientManager;
 
 };
 

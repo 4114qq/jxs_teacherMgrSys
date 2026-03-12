@@ -114,10 +114,10 @@ bool PluginManager::loadPlugin(const QString &pluginPath)
 
     if (!plugin->startPlugin()) {
         qWarning() << "Failed to start plugin:" << plugin->name();
+        emit pluginError(plugin->name(), "Failed to start plugin");
         plugin->cleanup();
         loader->unload();
         delete loader;
-        emit pluginError(plugin->name(), "Failed to start plugin");
         return false;
     }
 

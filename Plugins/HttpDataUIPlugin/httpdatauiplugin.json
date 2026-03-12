@@ -1,0 +1,9 @@
+{
+    "Name": "HttpDataUIPlugin",
+    "Version": "1.0.0",
+    "Description": "HTTP数据管理界面插件 - 管理课程和设备线路数据",
+    "Author": "jxs",
+    "Dependencies": [
+        "BaseCorePlugin"
+    ]
+}

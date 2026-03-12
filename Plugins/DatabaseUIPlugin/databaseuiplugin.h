@@ -6,6 +6,7 @@
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/IAuthManager.h"
+#include "../../common/interfaces/IHttpClientManager.h"
 
 class DatabaseWidget;
 
@@ -30,13 +31,10 @@ public:
     IDatabaseManager *databaseManager() const override;
     ILogManager *logManager() const override;
     IAuthManager *authManager() const override;
+    IHttpClientManager *httpClientManager() const override;
     IConfigManager *configManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
-    QVariant getConfig(const QString &key, const QVariant &defaultValue) const override;
-    void setConfig(const QString &key, const QVariant &value) override;
-    bool loadConfig() override;
-    bool saveConfig() override;
 
     QWidget *widget() const override;
     QString widgetTitle() const override;
@@ -55,7 +53,6 @@ private:
     ILogManager *m_logManager;
     IAuthManager *m_authManager;
     IBaseEventBus *m_eventManager;
-    QVariantMap m_config;
 
 };
 

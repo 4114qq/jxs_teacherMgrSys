@@ -64,6 +64,8 @@ public:
     void setLogManager(ILogManager *manager);
     QString fullKey(const QString &key) const;
     void notifyWatchers(const QString &key, const QVariant &value);
+    void parseJsonObject(const QJsonObject &obj, const QString &group);
+    QJsonObject buildJsonObject() const;
     QString getDefaultConfigPath() const;
     static QJsonObject jsonObjectFromVariantMap(const QVariantMap &map);
     static QVariantMap variantMapFromJsonObject(const QJsonObject &obj);

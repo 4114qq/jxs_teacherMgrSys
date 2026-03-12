@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTableWidget" name="tableWidget">
+    <widget class="QTreeWidget" name="treeWidget">
      <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
@@ -25,12 +25,12 @@
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
      </property>
-     <property name="columnCount">
-      <number>4</number>
+     <property name="headerHidden">
+      <bool>false</bool>
      </property>
      <column>
       <property name="text">
-       <string>Key</string>
+       <string notr="true">配置项</string>
       </property>
       <property name="width">
        <number>180</number>
@@ -38,7 +38,7 @@
      </column>
      <column>
       <property name="text">
-       <string>Value</string>
+       <string notr="true">值</string>
       </property>
       <property name="width">
        <number>150</number>
@@ -46,18 +46,10 @@
      </column>
      <column>
       <property name="text">
-       <string>Description</string>
+       <string notr="true">描述</string>
       </property>
       <property name="width">
        <number>250</number>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Type</string>
-      </property>
-      <property name="width">
-       <number>80</number>
       </property>
      </column>
     </widget>
@@ -65,27 +57,16 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="btnAdd">
+      <widget class="QPushButton" name="btnAddGroup">
        <property name="text">
-        <string>Add</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../../Resources/resources.qrc">
-         <normaloff>:/icons/add.png</normaloff>:/icons/add.png</iconset>
+        <string notr="true">添加分组</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnEdit">
+      <widget class="QPushButton" name="btnAddConfig">
        <property name="text">
-        <string>Edit</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnDelete">
-       <property name="text">
-        <string>Delete</string>
+        <string notr="true">添加配置</string>
        </property>
       </widget>
      </item>
@@ -105,7 +86,7 @@
      <item>
       <widget class="QPushButton" name="btnReload">
        <property name="text">
-        <string>Reload</string>
+        <string notr="true">重新加载</string>
        </property>
       </widget>
      </item>
@@ -125,18 +106,4 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>ConfigWidget</receiver>
-   <slot>onSaveConfig()</slot>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>ConfigWidget</receiver>
-   <slot>close()</slot>
-  </connection>
- </connections>
 </ui>

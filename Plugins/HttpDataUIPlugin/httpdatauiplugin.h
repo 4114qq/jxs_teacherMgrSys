@@ -1,24 +1,21 @@
-#ifndef EVENTUIPLUGIN_H
-#define EVENTUIPLUGIN_H
+#ifndef HTTPDATAUIPLUGIN_H
+#define HTTPDATAUIPLUGIN_H
 
-#include <QObject>
-#include <QVariantMap>
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
-#include "../../common/interfaces/IAuthManager.h"
 #include "../../common/interfaces/IHttpClientManager.h"
 
-class EventWidget;
+class HttpDataWidget;
 
-class EventUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
+class HttpDataUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.example.EventUIPlugin" FILE "eventuiplugin.json")
+    Q_PLUGIN_METADATA(IID "com.example.HttpDataUIPlugin" FILE "httpdatauiplugin.json")
     Q_INTERFACES(IBasePlugin IPluginWidget)
 
 public:
-    EventUIPlugin(QObject *parent = nullptr);
-    ~EventUIPlugin() override;
+    HttpDataUIPlugin(QObject *parent = nullptr);
+    ~HttpDataUIPlugin() override;
 
     QString name() const override;
     QString version() const override;
@@ -40,20 +37,21 @@ public:
     QString widgetTitle() const override;
     QIcon widgetIcon() const override;
 
-    void setEventManager(IBaseEventBus *manager);
-
+    void setHttpClientManager(IHttpClientManager *manager);
+    void setConfigManager(IConfigManager *configManager);
+    void setEventManager(IBaseEventBus *eventManager);
     void setCore(IBasePlugin *core) override;
     IBasePlugin *core() const override;
 
 private:
     IBasePlugin *m_core;
-    EventWidget *m_eventWidget;
+    HttpDataWidget *m_httpDataWidget;
     IBaseEventBus *m_eventManager;
     IDatabaseManager *m_databaseManager;
     ILogManager *m_logManager;
     IAuthManager *m_authManager;
+    IHttpClientManager *m_httpClientManager;
     IConfigManager *m_configManager;
-
 };
 
-#endif // EVENTUIPLUGIN_H
+#endif // HTTPDATAUIPLUGIN_H
