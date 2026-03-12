@@ -1,9 +1,9 @@
+/**
+ * @file basecoreplugin.cpp
+ * @brief 基础核心插件实现文件
+ */
+
 #include "basecoreplugin.h"
-#include "../../common/interfaces/IBasePlugin.h"
-#include "../../common/interfaces/ILogManager.h"
-#include "../../common/interfaces/IHttpClientManager.h"
-#include "EventManager.h"
-#include <QWidget>
 
 BaseCorePlugin::BaseCorePlugin(QObject *parent)
     : QObject(parent),
@@ -21,6 +21,8 @@ BaseCorePlugin::~BaseCorePlugin()
 {
     cleanup();
 }
+
+// ===== 插件基本信息 =====
 
 QString BaseCorePlugin::name() const
 {
@@ -41,6 +43,59 @@ QString BaseCorePlugin::author() const
 {
     return "JXS Team";
 }
+
+// ===== 核心插件设置 =====
+
+void BaseCorePlugin::setCore(IBasePlugin *core)
+{
+    m_core = core;
+}
+
+IBasePlugin *BaseCorePlugin::core() const
+{
+    return m_core;
+}
+
+// ===== 依赖管理 =====
+
+QStringList BaseCorePlugin::dependencies() const
+{
+    return QStringList();
+}
+
+// ===== 核心服务获取 =====
+
+IBaseEventBus *BaseCorePlugin::eventManager() const
+{
+    return m_eventManager;
+}
+
+IDatabaseManager *BaseCorePlugin::databaseManager() const
+{
+    return m_databaseManager;
+}
+
+IConfigManager *BaseCorePlugin::configManager() const
+{
+    return m_configManager;
+}
+
+ILogManager *BaseCorePlugin::logManager() const
+{
+    return m_logManager;
+}
+
+IAuthManager *BaseCorePlugin::authManager() const
+{
+    return m_authManager;
+}
+
+IHttpClientManager *BaseCorePlugin::httpClientManager() const
+{
+    return m_httpClientManager;
+}
+
+// ===== 插件生命周期管理 =====
 
 bool BaseCorePlugin::initialize()
 {
@@ -113,49 +168,4 @@ void BaseCorePlugin::cleanup()
     if (m_databaseManager) {
         m_databaseManager->disconnect();
     }
-}
-
-IBaseEventBus *BaseCorePlugin::eventManager() const
-{
-    return m_eventManager;
-}
-
-QStringList BaseCorePlugin::dependencies() const
-{
-    return QStringList();
-}
-
-IDatabaseManager *BaseCorePlugin::databaseManager() const
-{
-    return m_databaseManager;
-}
-
-ILogManager *BaseCorePlugin::logManager() const
-{
-    return m_logManager;
-}
-
-IAuthManager *BaseCorePlugin::authManager() const
-{
-    return m_authManager;
-}
-
-IHttpClientManager *BaseCorePlugin::httpClientManager() const
-{
-    return m_httpClientManager;
-}
-
-IConfigManager *BaseCorePlugin::configManager() const
-{
-    return m_configManager;
-}
-
-void BaseCorePlugin::setCore(IBasePlugin *core)
-{
-    m_core = core;
-}
-
-IBasePlugin *BaseCorePlugin::core() const
-{
-    return m_core;
 }
