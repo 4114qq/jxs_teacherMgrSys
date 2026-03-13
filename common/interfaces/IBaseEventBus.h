@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file IBaseEventBus.h
  * @brief 事件总线接口定义
  * @details 定义事件发布/订阅机制的接口
@@ -17,6 +17,15 @@
 class IBaseEventBus
 {
 public:
+    /**
+     * @struct Subscription
+     * @brief 订阅结构
+     */
+    struct Subscription {
+        QObject* receiver;  ///< 接收者对象
+        const char* slot;   ///< 槽函数指针
+    };
+
     /**
      * @brief 析构函数
      */
@@ -42,8 +51,7 @@ public:
      * @param slot 槽函数指针
      */
     virtual void subscribe(const QString& eventType, 
-                          QObject* receiver, 
-                          const char* slot) = 0;
+                          const Subscription& val) = 0;
 
     /**
      * @brief 取消订阅

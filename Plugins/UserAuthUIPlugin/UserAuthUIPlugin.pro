@@ -10,8 +10,7 @@ CONFIG += plugin
 DESTDIR = $$PWD/../../bin/x86_64/plugins
 
 INCLUDEPATH += ../../common/interfaces \
-                ../BaseCorePlugin \
-                ../../App
+                ../BaseCorePlugin
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,8 +24,3 @@ SOURCES += userauthuiplugin.cpp \
 
 FORMS += userauthwidget.ui
 
-CONFIG(debug, debug|release) {
-    TARGET = $$join(TARGET,,,d)
-} else {
-    TARGET = $$join(TARGET,,,)
-}

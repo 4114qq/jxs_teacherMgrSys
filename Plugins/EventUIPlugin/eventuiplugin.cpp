@@ -123,14 +123,6 @@ QIcon EventUIPlugin::widgetIcon() const
     return QIcon();
 }
 
-void EventUIPlugin::setEventManager(IBaseEventBus *manager)
-{
-    m_eventManager = manager;
-    if (m_eventWidget) {
-        m_eventWidget->setEventManager(manager);
-    }
-}
-
 void EventUIPlugin::setCore(IBasePlugin *core)
 {
     m_core = core;

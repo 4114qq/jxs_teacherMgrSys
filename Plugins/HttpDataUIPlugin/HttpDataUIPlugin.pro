@@ -3,9 +3,11 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = lib
-CONFIG += plugin
+DEFINES += HTTPDATAUIPLUGIN_LIBRARY
 
-CONFIG += c++17
+CONFIG += plugin c++17
+
+TARGET = $$qtLibraryTarget(HttpDataUIPlugin)
 
 SOURCES += \
     httpdatauiplugin.cpp \

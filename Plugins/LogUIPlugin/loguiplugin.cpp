@@ -114,14 +114,6 @@ QIcon LogUIPlugin::widgetIcon() const
     return QIcon();
 }
 
-void LogUIPlugin::setLogManager(ILogManager *manager)
-{
-    m_logManager = manager;
-    if (m_logWidget) {
-        m_logWidget->setLogManager(manager);
-    }
-}
-
 void LogUIPlugin::setCore(IBasePlugin *core)
 {
     m_core = core;

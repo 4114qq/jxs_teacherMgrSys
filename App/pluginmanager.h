@@ -7,7 +7,6 @@
 #include <QPluginLoader>
 #include <QWidget>
 #include "../common/interfaces/IBasePlugin.h"
-#include "../common/interfaces/IConfigManager.h"
 
 /**
  * @brief 插件管理器

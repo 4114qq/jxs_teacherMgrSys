@@ -11,8 +11,6 @@
 bool CoreEventBus::publish(const QString& eventType,
                           const QVariantMap& data)
 {
-    emit eventPublished(eventType, data);
-
     if (!m_subscriptions.contains(eventType)) return false;
 
     const auto& subs = m_subscriptions[eventType];
@@ -27,11 +25,9 @@ bool CoreEventBus::publish(const QString& eventType,
 // ===== 事件订阅 =====
 
 void CoreEventBus::subscribe(const QString& eventType,
-                            QObject* receiver,
-                            const char* slot)
+                             const Subscription &val)
 {
-    Subscription sub = { receiver, slot };
-    m_subscriptions[eventType].append(sub);
+    m_subscriptions[eventType].append(val);
 }
 
 void CoreEventBus::unsubscribe(const QString& eventType,

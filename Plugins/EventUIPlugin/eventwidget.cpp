@@ -42,11 +42,11 @@ EventWidget::~EventWidget()
 void EventWidget::setEventManager(IBaseEventBus *manager)
 {
     m_eventManager = manager;
-    CoreEventBus *coreBus = dynamic_cast<CoreEventBus*>(m_eventManager);
-    if (coreBus) {
-        connect(coreBus, &CoreEventBus::eventPublished,
-                this, &EventWidget::onEventPublished);
-    }
+    // CoreEventBus *coreBus = dynamic_cast<CoreEventBus*>(m_eventManager);
+    // if (coreBus) {
+    //     connect(coreBus, &CoreEventBus::eventPublished,
+    //             this, &EventWidget::onEventPublished);
+    // }
 }
 
 void EventWidget::onEventPublished(const QString &eventType, const QVariantMap &data)

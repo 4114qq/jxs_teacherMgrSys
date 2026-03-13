@@ -3,9 +3,11 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = lib
-CONFIG += plugin
+DEFINES += CONFIGUIPLUGIN_LIBRARY
 
-CONFIG += c++17
+CONFIG += plugin c++17
+
+TARGET = $$qtLibraryTarget(ConfigUIPlugin)
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

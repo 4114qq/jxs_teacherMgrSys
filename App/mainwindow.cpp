@@ -3,15 +3,7 @@
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QDir>
-#include "../../Plugins/ConfigUIPlugin/configuiplugin.h"
-#include "../../Plugins/DatabaseUIPlugin/databaseuiplugin.h"
-#include "../../Plugins/LogUIPlugin/loguiplugin.h"
-#include "../../common/interfaces/IBasePlugin.h"
-#include "../../common/interfaces/IConfigManager.h"
-#include "../../common/interfaces/IDatabaseManager.h"
-#include "../../common/interfaces/ILogManager.h"
-#include "../../common/interfaces/IBaseEventBus.h"
-#include "../../common/interfaces/IAuthManager.h"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -40,12 +32,6 @@ void MainWindow::initPluginManager()
     
     // 确定基础目录
     QString baseDir = QCoreApplication::applicationDirPath();
-    
-    // 优先使用 bin/x86_64 目录
-    QString binDir = QDir::fromNativeSeparators("Q:/111/jxs_teacherMgrSys/bin/x86_64");
-    if (QDir(binDir).exists()) {
-        baseDir = binDir;
-    }
     
     // 加载优先级配置
     QString priorityFile = baseDir + "/configs/priority.json";

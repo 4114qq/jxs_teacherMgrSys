@@ -42,8 +42,7 @@ public:
      * @param slot 槽函数指针
      */
     void subscribe(const QString& eventType,
-                  QObject* receiver,
-                  const char* slot) override;
+                  const Subscription& val) override;
 
     /**
      * @brief 取消订阅
@@ -53,24 +52,7 @@ public:
     void unsubscribe(const QString& eventType,
                     QObject* receiver) override;
 
-signals:
-    /**
-     * @brief 事件发布信号
-     * @param eventType 事件类型标识
-     * @param data 事件数据
-     */
-    void eventPublished(const QString &eventType, const QVariantMap &data);
-
 private:
-    /**
-     * @struct Subscription
-     * @brief 订阅结构
-     */
-    struct Subscription {
-        QObject* receiver;  ///< 接收者对象
-        const char* slot;   ///< 槽函数指针
-    };
-
     QMap<QString, QList<Subscription>> m_subscriptions; ///< 订阅列表
 };
 

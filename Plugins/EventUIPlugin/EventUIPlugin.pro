@@ -23,13 +23,3 @@ SOURCES += eventuiplugin.cpp \
             eventwidget.cpp
 
 FORMS += eventwidget.ui
-
-CONFIG(debug, debug|release) {
-    TARGET = $$join(TARGET,,,d)
-} else {
-    TARGET = $$join(TARGET,,,)
-}
-
-win32 {
-    LIBS += $$PWD/../../bin/x86_64/plugins/BaseCorePlugin.lib
-}

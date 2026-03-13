@@ -1,6 +1,5 @@
 ﻿#include "pluginmanager.h"
-#include "../common/interfaces/IConfigManager.h"
-#include "../common/interfaces/IPluginWidget.h"
+#include "interfaces/IPluginWidget.h"
 #include <QDir>
 #include <QDebug>
 #include <QVariantMap>

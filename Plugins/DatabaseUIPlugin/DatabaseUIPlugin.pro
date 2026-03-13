@@ -23,9 +23,3 @@ SOURCES += databaseuiplugin.cpp \
             databasewidget.cpp
 
 FORMS += databasewidget.ui
-
-CONFIG(debug, debug|release) {
-    TARGET = $$join(TARGET,,,d)
-} else {
-    TARGET = $$join(TARGET,,,)
-}

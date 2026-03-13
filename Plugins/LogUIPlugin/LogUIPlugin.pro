@@ -24,8 +24,3 @@ SOURCES += loguiplugin.cpp \
 
 FORMS += logwidget.ui
 
-CONFIG(debug, debug|release) {
-    TARGET = $$join(TARGET,,,d)
-} else {
-    TARGET = $$join(TARGET,,,)
-}

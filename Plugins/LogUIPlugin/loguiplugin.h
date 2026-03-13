@@ -41,8 +41,6 @@ public:
     QString widgetTitle() const override;
     QIcon widgetIcon() const override;
 
-    void setLogManager(ILogManager *manager);
-
     void setCore(IBasePlugin *core) override;
     IBasePlugin *core() const override;
 
