@@ -1,8 +1,16 @@
+/**
+ * @file AuthManager.cpp
+ * @brief 认证管理实现
+ * @details 提供用户登录、登出、权限验证、角色管理等功能实现
+ */
+
 #include "AuthManager.h"
 #include "DatabaseManager.h"
 #include <QDebug>
 #include <QDateTime>
 #include <QCryptographicHash>
+
+// ===== 构造函数 =====
 
 AuthManager::AuthManager(QObject *parent)
     : QObject(parent)
@@ -15,10 +23,14 @@ AuthManager::~AuthManager()
 {
 }
 
+// ===== 依赖设置 =====
+
 void AuthManager::setDatabaseManager(void *dbManager)
 {
     m_databaseManager = static_cast<DatabaseManager*>(dbManager);
 }
+
+// ===== 用户认证 =====
 
 bool AuthManager::login(const QString &username, const QString &password)
 {
@@ -31,7 +43,7 @@ bool AuthManager::login(const QString &username, const QString &password)
     hash.addData(password.toUtf8());
     QString encryptedPassword = hash.result().toHex();
 
-    QString sql = "SELECT * FROM MP_Person WHERE PersonNum = :username AND Password = :password ";//AND IsDel = 0";
+    QString sql = "SELECT * FROM MP_Person WHERE PersonNum = :username AND Password = :password ";
     QVariantMap params;
     params[":username"] = username;
     params[":password"] = encryptedPassword;
@@ -56,18 +68,6 @@ bool AuthManager::login(const QString &username, const QString &password)
 
     emit loginFailed("Invalid username or password");
     return false;
-}
-
-void AuthManager::parseRoleIds(const QString &roleIdsStr)
-{
-    m_currentRoles.clear();
-    m_currentPermissions.clear();
-
-    QStringList ids = roleIdsStr.split(",", Qt::SkipEmptyParts);
-    for (const QString &id : ids) {
-        m_currentRoles.append(id.trimmed());
-        m_currentPermissions.append(id.trimmed());
-    }
 }
 
 bool AuthManager::loginByFingerprint(int userId, const QByteArray &fingerprintData)
@@ -141,6 +141,8 @@ void AuthManager::logout()
     emit userLoggedOut();
 }
 
+// ===== 登录状态 =====
+
 bool AuthManager::isLoggedIn() const
 {
     return !m_currentUser.isEmpty() && m_currentUser.contains("id");
@@ -154,6 +156,20 @@ QVariantMap AuthManager::getCurrentUser() const
 int AuthManager::getCurrentLoginType() const
 {
     return m_loginType;
+}
+
+// ===== 权限验证 =====
+
+void AuthManager::parseRoleIds(const QString &roleIdsStr)
+{
+    m_currentRoles.clear();
+    m_currentPermissions.clear();
+
+    QStringList ids = roleIdsStr.split(",", Qt::SkipEmptyParts);
+    for (const QString &id : ids) {
+        m_currentRoles.append(id.trimmed());
+        m_currentPermissions.append(id.trimmed());
+    }
 }
 
 bool AuthManager::hasPermission(const QString &permissionCode) const
@@ -204,6 +220,8 @@ QStringList AuthManager::getUserRoles(int userId) const
     return QStringList();
 }
 
+// ===== 用户管理 =====
+
 QVariantList AuthManager::getUsers() const
 {
     QVariantList users;
@@ -211,7 +229,6 @@ QVariantList AuthManager::getUsers() const
         return users;
     }
 
-    //QString sql = "SELECT ID, PersonNum, Name, Sex, TelephoneNum, Company, IsDel FROM MP_Person WHERE IsDel = 0 ORDER BY ID";
     QString sql = "SELECT ID, PersonNum, Name, Sex, TelephoneNum, Company, IsDel FROM MP_Person ORDER BY ID";
     auto result = m_databaseManager->query(sql);
     while (result && result->next()) {
@@ -331,6 +348,8 @@ bool AuthManager::resetPassword(int userId, const QString &newPassword)
     );
 }
 
+// ===== 生物特征管理 =====
+
 bool AuthManager::setFingerprint(int userId, const QByteArray &fingerprintData)
 {
     if (!m_databaseManager) {
@@ -380,6 +399,8 @@ bool AuthManager::removeFaceData(int userId)
     );
 }
 
+// ===== 角色管理 =====
+
 QVariantList AuthManager::getRoles() const
 {
     return QVariantList();
@@ -421,6 +442,8 @@ bool AuthManager::assignRolesToUser(int userId, const QList<int> &roleIds)
         {{":roleIds", roleIdsStr}, {":id", userId}, {":UpdateTime", QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss")}}
     );
 }
+
+// ===== 权限管理 =====
 
 QVariantList AuthManager::getPermissions() const
 {

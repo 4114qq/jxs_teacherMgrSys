@@ -1,5 +1,10 @@
+﻿/**
+ * @file ConfigManager.cpp
+ * @brief 配置管理器实现
+ * @details 提供配置的读取、写入、保存、热重载等功能实现
+ */
+
 #include "ConfigManager.h"
-#include "../../common/interfaces/ILogManager.h"
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -8,6 +13,8 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QMutexLocker>
+
+// ===== 构造函数 =====
 
 ConfigManager::ConfigManager(QObject *parent)
     : QObject(parent)
@@ -25,6 +32,8 @@ ConfigManager::~ConfigManager()
         m_reloadTimer->stop();
     }
 }
+
+// ===== 基本读写 =====
 
 QString ConfigManager::getDefaultConfigPath() const
 {
@@ -111,6 +120,8 @@ QVariantMap ConfigManager::getAll() const
     return map;
 }
 
+// ===== 配置检查 =====
+
 bool ConfigManager::contains(const QString &key) const
 {
     QMutexLocker locker(&m_mutex);
@@ -160,6 +171,8 @@ void ConfigManager::clear()
     m_configItems.clear();
     m_watchers.clear();
 }
+
+// ===== 配置持久化 =====
 
 bool ConfigManager::load(const QString &filePath)
 {
@@ -385,6 +398,8 @@ QJsonObject ConfigManager::buildJsonObject() const
     return rootObj;
 }
 
+// ===== 热重载 =====
+
 bool ConfigManager::reload()
 {
     QString path;
@@ -421,6 +436,8 @@ bool ConfigManager::isHotReloadEnabled() const
     return m_hotReloadEnabled;
 }
 
+// ===== 配置监视 =====
+
 void ConfigManager::watch(const QString &key, std::function<void(const QVariant&)> callback)
 {
     QMutexLocker locker(&m_mutex);
@@ -432,6 +449,15 @@ void ConfigManager::unwatch(const QString &key)
     QMutexLocker locker(&m_mutex);
     m_watchers.remove(key);
 }
+
+void ConfigManager::notifyWatchers(const QString &key, const QVariant &value)
+{
+    if (m_watchers.contains(key)) {
+        m_watchers[key](value);
+    }
+}
+
+// ===== 分组管理 =====
 
 void ConfigManager::beginGroup(const QString &group)
 {
@@ -452,6 +478,16 @@ QString ConfigManager::currentGroup() const
     QMutexLocker locker(&m_mutex);
     return m_groupStack.join("/");
 }
+
+QString ConfigManager::fullKey(const QString &key) const
+{
+    if (m_groupStack.isEmpty()) {
+        return key;
+    }
+    return m_groupStack.join("/") + "/" + key;
+}
+
+// ===== 工具方法 =====
 
 QStringList ConfigManager::allKeys() const
 {
@@ -481,21 +517,6 @@ QString ConfigManager::configFileName() const
     return m_fileName;
 }
 
-QString ConfigManager::fullKey(const QString &key) const
-{
-    if (m_groupStack.isEmpty()) {
-        return key;
-    }
-    return m_groupStack.join("/") + "/" + key;
-}
-
-void ConfigManager::notifyWatchers(const QString &key, const QVariant &value)
-{
-    if (m_watchers.contains(key)) {
-        m_watchers[key](value);
-    }
-}
-
 QJsonObject ConfigManager::jsonObjectFromVariantMap(const QVariantMap &map)
 {
     QJsonObject obj;
@@ -518,6 +539,8 @@ void ConfigManager::setLogManager(ILogManager *manager)
 {
     m_logManager = manager;
 }
+
+// ===== 配置项管理 =====
 
 QList<ConfigItem> ConfigManager::getConfigItems() const
 {

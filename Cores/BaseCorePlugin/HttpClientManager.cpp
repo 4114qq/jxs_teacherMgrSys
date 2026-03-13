@@ -1,7 +1,15 @@
+﻿/**
+ * @file HttpClientManager.cpp
+ * @brief HTTP客户端管理器实现
+ * @details 提供HTTP请求、认证管理、课程和设备数据同步等功能实现
+ */
+
 #include "HttpClientManager.h"
 #include <QDebug>
 #include <QDateTime>
 #include <QEventLoop>
+
+// ===== 构造函数 =====
 
 HttpClientManager::HttpClientManager(QObject *parent)
     : QObject(parent)
@@ -23,6 +31,8 @@ HttpClientManager::~HttpClientManager()
     }
 }
 
+// ===== 服务器配置 =====
+
 void HttpClientManager::setServerUrl(const QString& url)
 {
     m_serverUrl = url;
@@ -38,6 +48,8 @@ QString HttpClientManager::serverUrl() const
     return m_serverUrl;
 }
 
+// ===== 超时设置 =====
+
 void HttpClientManager::setTimeout(int seconds)
 {
     m_timeout = seconds;
@@ -47,6 +59,8 @@ int HttpClientManager::timeout() const
 {
     return m_timeout;
 }
+
+// ===== 认证管理 =====
 
 void HttpClientManager::setToken(const QString& token)
 {
@@ -114,6 +128,8 @@ bool HttpClientManager::refreshToken()
     return false;
 }
 
+// ===== 设备线路操作 =====
+
 bool HttpClientManager::uploadEquipmentLine(const QList<EquipmentLine>& lines)
 {
     QJsonObject data;
@@ -151,6 +167,8 @@ bool HttpClientManager::deleteEquipmentLine(const QString& deviceId)
     }
     return m_lastSuccess;
 }
+
+// ===== 课程操作 =====
 
 bool HttpClientManager::uploadCourse(const QList<MKCourseInfo>& courses, const OverhaulItem* overhaulItem)
 {
@@ -236,6 +254,8 @@ MKCourseInfo HttpClientManager::fetchCourse(const QString& courseGuid)
     return result;
 }
 
+// ===== 错误信息 =====
+
 QString HttpClientManager::lastError() const
 {
     return m_lastError;
@@ -250,6 +270,8 @@ bool HttpClientManager::lastResponseSuccess() const
 {
     return m_lastSuccess;
 }
+
+// ===== 通用请求 =====
 
 void HttpClientManager::get(const QString& apiPath, const QJsonObject& params, std::function<void(QJsonObject)> callback)
 {

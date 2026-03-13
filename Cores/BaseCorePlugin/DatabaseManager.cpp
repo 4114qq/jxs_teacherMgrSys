@@ -1,9 +1,17 @@
+﻿/**
+ * @file DatabaseManager.cpp
+ * @brief 数据库管理器实现
+ * @details 提供数据库连接、查询、事务管理等操作实现
+ */
+
 #include "DatabaseManager.h"
 #include "../../common/interfaces/ILogManager.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QMutexLocker>
 #include <QDebug>
+
+// ===== 构造函数 =====
 
 DatabaseManager::DatabaseManager(QObject *parent)
     : QObject(parent)
@@ -32,6 +40,8 @@ void DatabaseManager::setLogManager(ILogManager *manager)
 {
     m_logManager = manager;
 }
+
+// ===== 连接管理 =====
 
 bool DatabaseManager::connect(const QString &host, int port, const QString &dbName,
                              const QString &user, const QString &password)
@@ -167,6 +177,26 @@ bool DatabaseManager::checkConnection()
     return true;
 }
 
+void DatabaseManager::startHealthCheck()
+{
+    if (!m_healthCheckTimer->isActive()) {
+        m_healthCheckTimer->start(30000);
+    }
+}
+
+void DatabaseManager::stopHealthCheck()
+{
+    if (m_healthCheckTimer->isActive()) {
+        m_healthCheckTimer->stop();
+    }
+}
+
+void DatabaseManager::scheduleReconnect()
+{
+}
+
+// ===== 查询执行 =====
+
 bool DatabaseManager::execute(const QString &sql)
 {
     QMutexLocker locker(&m_mutex);
@@ -247,6 +277,8 @@ QSharedPointer<QSqlQuery> DatabaseManager::query(const QString &sql, const QVari
     return query;
 }
 
+// ===== 事务管理 =====
+
 bool DatabaseManager::transaction()
 {
     QMutexLocker locker(&m_mutex);
@@ -283,6 +315,8 @@ bool DatabaseManager::rollback()
     return m_db.rollback();
 }
 
+// ===== 信息获取 =====
+
 QString DatabaseManager::lastError() const
 {
     QMutexLocker locker(&m_mutex);
@@ -303,22 +337,4 @@ void DatabaseManager::setDatabaseType(const QString &type)
     } else {
         m_databaseType = type;
     }
-}
-
-void DatabaseManager::startHealthCheck()
-{
-    if (!m_healthCheckTimer->isActive()) {
-        m_healthCheckTimer->start(30000);
-    }
-}
-
-void DatabaseManager::stopHealthCheck()
-{
-    if (m_healthCheckTimer->isActive()) {
-        m_healthCheckTimer->stop();
-    }
-}
-
-void DatabaseManager::scheduleReconnect()
-{
 }

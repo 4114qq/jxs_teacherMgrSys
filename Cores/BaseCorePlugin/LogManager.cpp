@@ -1,7 +1,15 @@
+﻿/**
+ * @file LogManager.cpp
+ * @brief 日志管理器实现
+ * @details 提供日志记录、日志级别管理、日志文件管理等功能实现
+ */
+
 #include "LogManager.h"
 #include <QDir>
 #include <QDateTime>
 #include <QDebug>
+
+// ===== 构造函数 =====
 
 LogManager::LogManager(QObject *parent)
     : QObject(parent)
@@ -36,6 +44,8 @@ LogManager::~LogManager()
         m_logFile = nullptr;
     }
 }
+
+// ===== 日志记录 =====
 
 void LogManager::logDebug(const QString &tag, const QString &message)
 {
@@ -92,6 +102,8 @@ void LogManager::writeLog(LogLevel level, const QString &tag, const QString &mes
     emit newLogEntry(entry);
 }
 
+// ===== 日志级别 =====
+
 void LogManager::setLogLevel(LogLevel level)
 {
     QMutexLocker locker(&m_mutex);
@@ -102,6 +114,8 @@ LogLevel LogManager::getLogLevel() const
 {
     return m_logLevel;
 }
+
+// ===== 日志文件 =====
 
 void LogManager::setLogFilePath(const QString &path)
 {
@@ -137,6 +151,8 @@ QString LogManager::getLogFilePath() const
     return m_logFilePath;
 }
 
+// ===== 日志查询 =====
+
 void LogManager::clearLogs()
 {
     QMutexLocker locker(&m_mutex);
@@ -162,6 +178,8 @@ QStringList LogManager::getTags() const
 {
     return m_tags;
 }
+
+// ===== 辅助函数 =====
 
 QString LogManager::levelToString(LogLevel level) const
 {
