@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file IPluginWidget.h
  * @brief 插件界面接口定义
  * @details 定义插件窗口的抽象接口

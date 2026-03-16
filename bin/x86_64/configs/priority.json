@@ -6,7 +6,8 @@
     "LogUIPlugin",
     "EventUIPlugin",
     "UserAuthUIPlugin",
-    "HttpDataUIPlugin"
+    "HttpDataUIPlugin",
+    "VideoUIPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
@@ -14,6 +15,7 @@
     "LogUIPlugin": ["BaseCorePlugin"],
     "EventUIPlugin": ["BaseCorePlugin"],
     "UserAuthUIPlugin": ["BaseCorePlugin"],
-    "HttpDataUIPlugin": ["BaseCorePlugin"]
+    "HttpDataUIPlugin": ["BaseCorePlugin"],
+    "VideoUIPlugin": ["BaseCorePlugin"]
   }
 }

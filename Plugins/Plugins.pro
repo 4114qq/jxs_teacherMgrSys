@@ -4,4 +4,5 @@ SUBDIRS += ConfigUIPlugin \
             LogUIPlugin \
             EventUIPlugin \
             UserAuthUIPlugin \
-            HttpDataUIPlugin
+            HttpDataUIPlugin \
+            VideoUIPlugin
