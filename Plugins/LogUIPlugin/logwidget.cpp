@@ -28,8 +28,6 @@ LogWidget::LogWidget(QWidget *parent)
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
     ui->tableWidget->setAlternatingRowColors(true);
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-
-    m_refreshTimer->start(1000);
 }
 
 LogWidget::~LogWidget()
@@ -43,6 +41,7 @@ void LogWidget::setLogManager(ILogManager *manager)
     m_logManager = manager;
     if (m_logManager) {
         refreshLogs();
+        m_refreshTimer->start(1000);
     }
 }
 

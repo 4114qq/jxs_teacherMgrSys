@@ -1,4 +1,4 @@
-﻿#ifndef VIDEOWIDGET_H
+#ifndef VIDEOWIDGET_H
 #define VIDEOWIDGET_H
 
 #include <QWidget>
@@ -45,6 +45,7 @@ protected:
 private:
     void initUI();
     void initVLC();
+    void updateCenterControlsPosition();
 
 private:
 #if defined(Q_OS_WIN)

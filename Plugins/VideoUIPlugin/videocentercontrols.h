@@ -1,12 +1,11 @@
 #ifndef VIDEOCENTERCONTROLS_H
 #define VIDEOCENTERCONTROLS_H
 
-#include <QDialog>
 #include <QWidget>
 #include <QPushButton>
 #include <QHBoxLayout>
 
-class VideoCenterControls : public QDialog
+class VideoCenterControls : public QWidget
 {
     Q_OBJECT
 

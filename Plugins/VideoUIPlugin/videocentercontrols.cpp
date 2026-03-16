@@ -1,12 +1,13 @@
 ﻿#include "videocentercontrols.h"
 
 VideoCenterControls::VideoCenterControls(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , m_btnSeekBackward(nullptr)
     , m_btnPlayPause(nullptr)
     , m_btnSeekForward(nullptr)
     , m_isPlaying(false)
 {
+    setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
     setStyleSheet("background: transparent;");
 
@@ -29,7 +30,7 @@ VideoCenterControls::VideoCenterControls(QWidget *parent)
     connect(m_btnSeekForward, &QPushButton::clicked, this, &VideoCenterControls::onSeekForwardClicked);
 
     QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(40, 0, 40, 0);
     layout->setSpacing(20);
     layout->addStretch();
     layout->addWidget(m_btnSeekBackward);
