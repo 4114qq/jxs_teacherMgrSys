@@ -34,6 +34,7 @@ private slots:
     void onStop();
     void onVolumeChanged(int value);
     void onFullScreen();
+    void toggleFullScreen();
     void onPositionChangedFromSlider(qint64 position);
     void onSeekBackward();
     void onSeekForward();
@@ -46,6 +47,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
     void initUI();

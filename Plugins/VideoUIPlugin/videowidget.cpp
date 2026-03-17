@@ -258,23 +258,6 @@ void VideoWidget::onPlayPause()
     }
 }
 
-// void VideoWidget::onStop()
-// {
-//     if (!m_vlcPlayer) {
-//         return;
-//     }
-
-//     m_isPlaying = false;
-//     m_controlBar->setPlaying(false);
-//     m_centerControls->setPlaying(false);
-//     m_centerControls->hide();
-//     m_controlBar->setPosition(0);
-
-//     QTimer::singleShot(0, this, [this]() {
-//         libvlc_media_player_stop(m_vlcPlayer);
-//     });
-// }
-
 void VideoWidget::onVolumeChanged(int value)
 {
 #if defined(Q_OS_WIN)
@@ -286,10 +269,16 @@ void VideoWidget::onVolumeChanged(int value)
 
 void VideoWidget::onFullScreen()
 {
-    if (isFullScreen()) {
-        showNormal();
+    toggleFullScreen();
+}
+
+void VideoWidget::toggleFullScreen()
+{
+    QWidget *topLevel = window();
+    if (topLevel->isFullScreen()) {
+        topLevel->showNormal();
     } else {
-        showFullScreen();
+        topLevel->showFullScreen();
     }
 }
 
@@ -369,6 +358,11 @@ void VideoWidget::mouseReleaseEvent(QMouseEvent *event)
 {
     QWidget::mouseReleaseEvent(event);
     showControls();
+}
+
+void VideoWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    toggleFullScreen();
 }
 
 bool VideoWidget::eventFilter(QObject *obj, QEvent *event)
