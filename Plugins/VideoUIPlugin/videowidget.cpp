@@ -13,16 +13,23 @@ VideoWidget::VideoWidget(QWidget *parent)
     : QWidget(parent)
     , m_vlcInstance(nullptr)
     , m_vlcPlayer(nullptr)
+    , m_mediaListPlayer(nullptr)
     , m_videoContainer(nullptr)
     , m_controlBar(nullptr)
     , m_centerControls(nullptr)
     , m_positionTimer(nullptr)
+    , m_hideTimer(nullptr)
     , m_isPlaying(false)
+    , m_controlsVisible(true)
 {
     initUI();
 #if defined(Q_OS_WIN)
     initVLC();
 #endif
+
+    m_hideTimer = new QTimer(this);
+    m_hideTimer->setSingleShot(true);
+    connect(m_hideTimer, &QTimer::timeout, this, &VideoWidget::onHideTimerExpired);
 
     QTimer::singleShot(100, this, [this]() {
         QWidget *topLevel = window();
@@ -35,6 +42,10 @@ VideoWidget::VideoWidget(QWidget *parent)
 VideoWidget::~VideoWidget()
 {
 #if defined(Q_OS_WIN)
+    if (m_mediaListPlayer) {
+        libvlc_media_list_player_stop(m_mediaListPlayer);
+        libvlc_media_list_player_release(m_mediaListPlayer);
+    }
     if (m_vlcPlayer) {
         libvlc_media_player_stop(m_vlcPlayer);
         libvlc_media_player_release(m_vlcPlayer);
@@ -49,6 +60,7 @@ void VideoWidget::initUI()
 {
     m_videoContainer = new QWidget(this);
     m_videoContainer->setStyleSheet("background-color: black;");
+    m_videoContainer->setMouseTracking(true);
 
     m_controlBar = new VideoControlBar(this);
 
@@ -56,8 +68,13 @@ void VideoWidget::initUI()
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
     mainLayout->addWidget(m_videoContainer, 1);
     mainLayout->addWidget(m_controlBar);
+
+    setMouseTracking(true);
+    m_videoContainer->installEventFilter(this);
+    installEventFilter(this);
 
     connect(m_controlBar, &VideoControlBar::openClicked, this, &VideoWidget::onOpenFile);
     connect(m_controlBar, &VideoControlBar::playPauseClicked, this, &VideoWidget::onPlayPause);
@@ -101,6 +118,8 @@ void VideoWidget::initVLC()
     }
 
     libvlc_media_player_set_hwnd(m_vlcPlayer, (void *)m_videoContainer->winId());
+    libvlc_video_set_mouse_input(m_vlcPlayer, 0);
+    libvlc_video_set_key_input(m_vlcPlayer, 0);
 
     qDebug() << "VLC initialized successfully, plugin path:" << pluginPath;
 }
@@ -111,7 +130,11 @@ void VideoWidget::play()
     if (!m_vlcPlayer) {
         return;
     }
-    libvlc_media_player_play(m_vlcPlayer);
+    if (m_mediaListPlayer) {
+        libvlc_media_list_player_play(m_mediaListPlayer);
+    } else {
+        libvlc_media_player_play(m_vlcPlayer);
+    }
     m_isPlaying = true;
     m_controlBar->setPlaying(true);
     m_centerControls->setPlaying(true);
@@ -119,6 +142,7 @@ void VideoWidget::play()
     m_centerControls->raise();
     updateCenterControlsPosition();
     m_positionTimer->start(500);
+    m_hideTimer->start(3000);
 #endif
 }
 
@@ -160,7 +184,15 @@ void VideoWidget::stop()
     if (!m_vlcPlayer) {
         return;
     }
-    libvlc_media_player_stop(m_vlcPlayer);
+    if (m_mediaListPlayer) {
+        libvlc_media_list_player_stop(m_mediaListPlayer);
+    } else {
+        libvlc_media_player_stop(m_vlcPlayer);
+    }
+    m_isPlaying = false;
+    m_hideTimer->stop();
+    m_centerControls->hide();
+    m_controlBar->setPlaying(false);
 #endif
 }
 
@@ -187,6 +219,16 @@ void VideoWidget::openFile(const QString &filePath)
     }
 
     libvlc_media_player_set_media(m_vlcPlayer, media);
+
+    libvlc_media_list_t *mediaList = libvlc_media_list_new(m_vlcInstance);
+    libvlc_media_list_add_media(mediaList, media);
+    libvlc_media_list_player_t *mlp = libvlc_media_list_player_new(m_vlcInstance);
+    libvlc_media_list_player_set_media_list(mlp, mediaList);
+    libvlc_media_list_player_set_media_player(mlp, m_vlcPlayer);
+    libvlc_media_list_player_set_playback_mode(mlp, libvlc_playback_mode_loop);
+
+    m_mediaListPlayer = mlp;
+
     libvlc_media_release(media);
 
     play();
@@ -311,10 +353,35 @@ void VideoWidget::moveEvent(QMoveEvent *event)
     updateCenterControlsPosition();
 }
 
+void VideoWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    QWidget::mouseMoveEvent(event);
+    showControls();
+}
+
+void VideoWidget::mousePressEvent(QMouseEvent *event)
+{
+    QWidget::mousePressEvent(event);
+    showControls();
+}
+
+void VideoWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    QWidget::mouseReleaseEvent(event);
+    showControls();
+}
+
 bool VideoWidget::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::Move || event->type() == QEvent::Resize) {
         updateCenterControlsPosition();
+    }
+    if (obj == m_videoContainer || obj == this) {
+        if (event->type() == QEvent::MouseMove ||
+            event->type() == QEvent::MouseButtonPress ||
+            event->type() == QEvent::MouseButtonRelease) {
+            showControls();
+        }
     }
     return QWidget::eventFilter(obj, event);
 }
@@ -329,5 +396,32 @@ void VideoWidget::updateCenterControlsPosition()
         int cy = globalPos.y() + (m_videoContainer->height() - ch) / 2;
         m_centerControls->move(cx, cy);
         m_centerControls->resize(cw, ch);
+    }
+}
+
+void VideoWidget::onHideTimerExpired()
+{
+    if (m_centerControls && m_isPlaying) {
+        m_centerControls->hide();
+        m_controlsVisible = false;
+    }
+}
+
+void VideoWidget::showControls()
+{
+    if (m_centerControls && m_isPlaying) {
+        m_centerControls->show();
+        m_centerControls->raise();
+        updateCenterControlsPosition();
+        m_controlsVisible = true;
+        m_hideTimer->start(3000);
+    }
+}
+
+void VideoWidget::resetHideTimer()
+{
+    if (m_hideTimer && m_isPlaying) {
+        m_hideTimer->stop();
+        m_hideTimer->start(3000);
     }
 }
