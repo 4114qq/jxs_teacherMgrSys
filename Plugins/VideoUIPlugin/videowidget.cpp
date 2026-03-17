@@ -23,6 +23,13 @@ VideoWidget::VideoWidget(QWidget *parent)
 #if defined(Q_OS_WIN)
     initVLC();
 #endif
+
+    QTimer::singleShot(100, this, [this]() {
+        QWidget *topLevel = window();
+        if (topLevel && topLevel != this) {
+            topLevel->installEventFilter(this);
+        }
+    });
 }
 
 VideoWidget::~VideoWidget()
@@ -76,6 +83,7 @@ void VideoWidget::initVLC()
         "--no-video-title-show",
         "--no-snapshot-preview",
         "--no-sub-autodetect-file",
+        "--no-stats",
         qPrintable(QString("--plugin-path=%1").arg(pluginPath))
     };
     int vlcArgc = sizeof(vlcArgv) / sizeof(vlcArgv[0]);
@@ -297,13 +305,27 @@ void VideoWidget::resizeEvent(QResizeEvent *event)
     updateCenterControlsPosition();
 }
 
+void VideoWidget::moveEvent(QMoveEvent *event)
+{
+    QWidget::moveEvent(event);
+    updateCenterControlsPosition();
+}
+
+bool VideoWidget::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::Move || event->type() == QEvent::Resize) {
+        updateCenterControlsPosition();
+    }
+    return QWidget::eventFilter(obj, event);
+}
+
 void VideoWidget::updateCenterControlsPosition()
 {
     if (m_videoContainer && m_centerControls) {
         QPoint globalPos = m_videoContainer->mapToGlobal(QPoint(0, 0));
         int cw = 200;
         int ch = 100;
-        int cx = globalPos.x() + (m_videoContainer->width() - cw) / 2;
+        int cx = globalPos.x() + (m_videoContainer->width() - cw) / 2 - 50;
         int cy = globalPos.y() + (m_videoContainer->height() - ch) / 2;
         m_centerControls->move(cx, cy);
         m_centerControls->resize(cw, ch);
