@@ -31,6 +31,7 @@ void ConfigWidget::setConfigManager(IConfigManager *configManager)
     if (m_model && m_configManager) {
         m_model->setConfigManager(m_configManager);
         m_model->loadConfig();
+        m_treeView->expandAll();
     }
 }
 
@@ -79,6 +80,7 @@ void ConfigWidget::onReloadConfig()
     if (m_configManager && m_configManager->reload()) {
         if (m_model) {
             m_model->loadConfig();
+            m_treeView->expandAll();
         }
         QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置重新加载成功!"));
     } else {
