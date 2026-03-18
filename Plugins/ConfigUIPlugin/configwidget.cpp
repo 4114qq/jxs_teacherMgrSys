@@ -1,13 +1,19 @@
 ﻿#include "configwidget.h"
 #include "ui_configwidget.h"
+#include "configmodel.h"
+#include "addconfigdialog.h"
 #include "../../common/interfaces/IConfigManager.h"
 #include <QMessageBox>
 #include <QPushButton>
 #include <QInputDialog>
+#include <QStandardItem>
+#include <QHeaderView>
+#include <QSizePolicy>
 
 ConfigWidget::ConfigWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ConfigWidget)
+    , m_model(nullptr)
     , m_configManager(nullptr)
 {
     ui->setupUi(this);
@@ -22,166 +28,62 @@ ConfigWidget::~ConfigWidget()
 void ConfigWidget::setConfigManager(IConfigManager *configManager)
 {
     m_configManager = configManager;
-    if (m_configManager) {
-        loadConfigToUI();
+    if (m_model && m_configManager) {
+        m_model->setConfigManager(m_configManager);
+        m_model->loadConfig();
     }
 }
 
 void ConfigWidget::initUI()
 {
-    ui->treeWidget->setColumnCount(3);
-    ui->treeWidget->setHeaderLabels(QStringList() << QString::fromLocal8Bit("配置项") << QString::fromLocal8Bit("值") << QString::fromLocal8Bit("描述"));
-    ui->treeWidget->header()->setStretchLastSection(true);
-    ui->treeWidget->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    ui->treeWidget->setAlternatingRowColors(true);
+    m_model = new ConfigModel(this);
+    m_treeView = ui->treeView;
+    m_treeView->setModel(m_model);
+    m_treeView->setAlternatingRowColors(true);
+    m_treeView->setEditTriggers(QAbstractItemView::DoubleClicked);
+    m_treeView->setHeaderHidden(false);
+    m_treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_treeView->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    m_model->setHorizontalHeaderLabels(QStringList() << QString::fromLocal8Bit("配置项") << QString::fromLocal8Bit("值") << QString::fromLocal8Bit("描述"));
+
+    m_treeView->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_treeView->header()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_treeView->header()->setSectionResizeMode(2, QHeaderView::Stretch);
+
+    m_treeView->setDragEnabled(true);
+    m_treeView->setAcceptDrops(true);
+    m_treeView->setDropIndicatorShown(true);
+    m_treeView->setDragDropMode(QAbstractItemView::DragDrop);
+    m_treeView->setDefaultDropAction(Qt::MoveAction);
+    m_treeView->setItemsExpandable(true);
+    m_treeView->expandAll();
 
     connect(ui->btnReload, &QPushButton::clicked, this, &ConfigWidget::onReloadConfig);
     connect(ui->btnAddGroup, &QPushButton::clicked, this, &ConfigWidget::onAddGroup);
     connect(ui->btnAddConfig, &QPushButton::clicked, this, &ConfigWidget::onAddConfig);
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &ConfigWidget::onSaveConfig);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &ConfigWidget::close);
-    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &ConfigWidget::onTreeItemChanged);
-}
-
-void ConfigWidget::loadConfigToUI()
-{
-    if (!m_configManager) {
-        return;
-    }
-
-    ui->treeWidget->blockSignals(true);
-    ui->treeWidget->clear();
-
-    QList<ConfigItem> items = m_configManager->getConfigItems();
-    QMap<QString, QTreeWidgetItem*> groupMap;
-
-    for (const ConfigItem &item : items) {
-        QString groupName = item.group.isEmpty() ? "General" : item.group;
-
-        QTreeWidgetItem *groupItem;
-        if (groupMap.contains(groupName)) {
-            groupItem = groupMap[groupName];
-        } else {
-            groupItem = new QTreeWidgetItem(ui->treeWidget);
-            groupItem->setText(0, groupName);
-            groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
-            groupMap[groupName] = groupItem;
-            ui->treeWidget->addTopLevelItem(groupItem);
-        }
-
-        QTreeWidgetItem *childItem = new QTreeWidgetItem(groupItem);
-        childItem->setText(0, item.key);
-        childItem->setFlags(childItem->flags() | Qt::ItemIsEditable);
-
-        QString valueStr;
-        if (item.type == "bool") {
-            valueStr = item.value.toBool() ? "true" : "false";
-        } else if (item.type == "int" || item.type == "double") {
-            valueStr = item.value.toString();
-        } else {
-            valueStr = item.value.toString();
-        }
-        childItem->setText(1, valueStr);
-        childItem->setText(2, item.description);
-
-        childItem->setData(0, Qt::UserRole, item.key);
-        childItem->setData(1, Qt::UserRole, item.type);
-        childItem->setData(2, Qt::UserRole, item.group);
-
-        groupItem->addChild(childItem);
-    }
-
-    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
-        ui->treeWidget->topLevelItem(i)->setExpanded(true);
-    }
-
-    ui->treeWidget->blockSignals(false);
+    connect(ui->btnDelete, &QPushButton::clicked, this, &ConfigWidget::onDeleteConfig);
+    connect(ui->btnSave, &QPushButton::clicked, this, &ConfigWidget::onSaveConfig);
 }
 
 void ConfigWidget::onSaveConfig()
 {
-    if (!m_configManager) {
-        return;
-    }
-
-    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
-        QTreeWidgetItem *groupItem = ui->treeWidget->topLevelItem(i);
-        QString groupName = groupItem->text(0);
-
-        for (int j = 0; j < groupItem->childCount(); ++j) {
-            QTreeWidgetItem *item = groupItem->child(j);
-            QString key = item->data(0, Qt::UserRole).toString();
-            if (key.isEmpty()) {
-                key = item->text(0);
-            }
-            if (key.isEmpty()) {
-                continue;
-            }
-            QString value = item->text(1);
-            QString description = item->text(2);
-            QString actualGroup = groupName == "General" ? "" : groupName;
-
-            ConfigItem configItem;
-            configItem.key = key;
-            configItem.group = actualGroup;
-            configItem.value = value;
-            configItem.description = description;
-            configItem.type = item->data(1, Qt::UserRole).toString();
-            m_configManager->updateConfigItem(configItem);
-        }
-    }
-
-    if (m_configManager->save()) {
+    if (m_model) {
+        m_model->saveConfig();
         QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置保存成功!"));
-    } else {
-        QMessageBox::warning(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置保存失败!"));
     }
 }
 
 void ConfigWidget::onReloadConfig()
 {
-    if (m_configManager->reload()) {
-        loadConfigToUI();
+    if (m_configManager && m_configManager->reload()) {
+        if (m_model) {
+            m_model->loadConfig();
+        }
         QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("配置重新加载成功!"));
     } else {
         QMessageBox::warning(this, QString::fromLocal8Bit("错误"), QString::fromLocal8Bit("配置重新加载失败!"));
     }
-}
-
-void ConfigWidget::onTreeItemChanged(QTreeWidgetItem *item, int column)
-{
-    if (!item || !item->parent()) {
-        return;
-    }
-
-    QString key = item->data(0, Qt::UserRole).toString();
-    QString group = item->data(2, Qt::UserRole).toString();
-
-    if (!m_configManager) {
-        return;
-    }
-
-    ConfigItem configItem;
-    configItem.key = key;
-    configItem.group = group;
-
-    if (column == 1) {
-        QString value = item->text(1);
-        configItem.value = value;
-    } else if (column == 2) {
-        QString description = item->text(2);
-        configItem.description = description;
-        QList<ConfigItem> items = m_configManager->getConfigItems();
-        for (const auto &existing : items) {
-            if (existing.key == key && existing.group == group) {
-                configItem.value = existing.value;
-                configItem.type = existing.type;
-                break;
-            }
-        }
-    }
-
-    m_configManager->updateConfigItem(configItem);
 }
 
 void ConfigWidget::onAddGroup()
@@ -192,65 +94,102 @@ void ConfigWidget::onAddGroup()
         return;
     }
 
-    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
-        if (ui->treeWidget->topLevelItem(i)->text(0) == groupName) {
-            QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("分组已存在!"));
-            return;
+    if (m_model) {
+        for (int i = 0; i < m_model->rowCount(); ++i) {
+            if (m_model->item(i, 0)->text() == groupName) {
+                QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("分组已存在!"));
+                return;
+            }
         }
-    }
 
-    QTreeWidgetItem *groupItem = new QTreeWidgetItem(ui->treeWidget);
-    groupItem->setText(0, groupName);
-    groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
-    ui->treeWidget->addTopLevelItem(groupItem);
-    groupItem->setExpanded(true);
+        QStandardItem *groupItem = new QStandardItem(groupName);
+        groupItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+        m_model->appendRow(groupItem);
+    }
 }
 
 void ConfigWidget::onAddConfig()
 {
-    bool ok;
-    QString key = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("配置项:"), QLineEdit::Normal, "", &ok);
-    if (!ok || key.isEmpty()) {
-        return;
-    }
-
-    QString value = QInputDialog::getText(this, QString::fromLocal8Bit("添加配置"), QString::fromLocal8Bit("值:"), QLineEdit::Normal, "", &ok);
-    if (!ok) {
-        return;
-    }
-
-    QString groupName = "General";
-    QTreeWidgetItem *selectedItem = ui->treeWidget->currentItem();
-    if (selectedItem) {
-        if (selectedItem->parent()) {
-            groupName = selectedItem->parent()->text(0);
-        } else {
-            groupName = selectedItem->text(0);
+    QStringList groups;
+    if (m_model) {
+        for (int i = 0; i < m_model->rowCount(); ++i) {
+            groups.append(m_model->item(i, 0)->text());
         }
     }
 
-    QTreeWidgetItem *groupItem = nullptr;
-    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); ++i) {
-        if (ui->treeWidget->topLevelItem(i)->text(0) == groupName) {
-            groupItem = ui->treeWidget->topLevelItem(i);
-            break;
+    AddConfigDialog dialog(groups, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString key = dialog.key();
+        QString value = dialog.value();
+        QString description = dialog.description();
+        QString groupName = dialog.group();
+        if (groupName.isEmpty()) {
+            groupName = "General";
+        }
+
+        QStandardItem *groupItem = nullptr;
+        if (m_model) {
+            for (int i = 0; i < m_model->rowCount(); ++i) {
+                if (m_model->item(i, 0)->text() == groupName) {
+                    groupItem = m_model->item(i, 0);
+                    break;
+                }
+            }
+
+            if (!groupItem) {
+                groupItem = new QStandardItem(groupName);
+                m_model->appendRow(groupItem);
+            }
+
+            QStandardItem *keyItem = new QStandardItem(key);
+            keyItem->setData("string", Qt::UserRole);
+            keyItem->setData(key, Qt::UserRole + 1);
+
+            QStandardItem *valueItem = new QStandardItem(value);
+            QStandardItem *descItem = new QStandardItem(description);
+
+            QList<QStandardItem*> rowItems;
+            rowItems << keyItem << valueItem << descItem;
+            groupItem->appendRow(rowItems);
         }
     }
+}
 
-    if (!groupItem) {
-        groupItem = new QTreeWidgetItem(ui->treeWidget);
-        groupItem->setText(0, groupName);
-        groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsEditable);
-        ui->treeWidget->addTopLevelItem(groupItem);
+void ConfigWidget::onDeleteConfig()
+{
+    QModelIndex currentIndex = m_treeView->currentIndex();
+    if (!currentIndex.isValid()) {
+        QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("请先选择要删除的项!"));
+        return;
     }
 
-    QTreeWidgetItem *childItem = new QTreeWidgetItem(groupItem);
-    childItem->setText(0, key);
-    childItem->setText(1, value);
-    childItem->setFlags(childItem->flags() | Qt::ItemIsEditable);
-    childItem->setData(0, Qt::UserRole, key);
-    childItem->setData(1, Qt::UserRole, "string");
-    childItem->setData(2, Qt::UserRole, groupName == "General" ? "" : groupName);
-    groupItem->addChild(childItem);
-    groupItem->setExpanded(true);
+    QStandardItem *item = m_model->itemFromIndex(currentIndex);
+    if (!item) {
+        return;
+    }
+
+    if (item->parent()) {
+        int ret = QMessageBox::question(this, QString::fromLocal8Bit("确认"),
+            QString::fromLocal8Bit("确定要删除配置项 \"%1\" 吗?").arg(item->text()),
+            QMessageBox::Yes | QMessageBox::No);
+        if (ret == QMessageBox::Yes) {
+            QStandardItem *parent = item->parent();
+            parent->removeRow(item->row());
+            if (m_configManager) {
+                m_configManager->save();
+            }
+            QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("删除成功!"));
+        }
+    } else {
+        int ret = QMessageBox::question(this, QString::fromLocal8Bit("确认"),
+            QString::fromLocal8Bit("确定要删除分组 \"%1\" 及其所有配置项吗?").arg(item->text()),
+            QMessageBox::Yes | QMessageBox::No);
+        if (ret == QMessageBox::Yes) {
+            m_model->removeRow(item->row());
+            if (m_configManager) {
+                m_configManager->save();
+            }
+            QMessageBox::information(this, QString::fromLocal8Bit("成功"), QString::fromLocal8Bit("删除成功!"));
+        }
+    }
 }

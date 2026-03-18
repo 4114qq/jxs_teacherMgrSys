@@ -15,11 +15,15 @@ TARGET = $$qtLibraryTarget(ConfigUIPlugin)
 
 SOURCES += \
     configuiplugin.cpp \
-    configwidget.cpp
+    configwidget.cpp \
+    configmodel.cpp \
+    addconfigdialog.cpp
 
 HEADERS += \
     configuiplugin.h \
-    configwidget.h
+    configwidget.h \
+    configmodel.h \
+    addconfigdialog.h
 
 FORMS += \
     configwidget.ui

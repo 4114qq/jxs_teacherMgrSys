@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file ConfigManager.cpp
  * @brief 配置管理器实现
  * @details 提供配置的读取、写入、保存、热重载等功能实现
@@ -291,13 +291,6 @@ void ConfigManager::parseJsonObject(const QJsonObject &obj, const QString &group
 bool ConfigManager::save(const QString &filePath)
 {
     QMutexLocker locker(&m_mutex);
-
-    if (m_configItems.isEmpty()) {
-        if (m_logManager) {
-            m_logManager->logDebug("ConfigManager", "No config items to save, skipping save operation");
-        }
-        return true;
-    }
 
     QString path = filePath.isEmpty() ? getDefaultConfigPath() : filePath;
     m_configPath = path;

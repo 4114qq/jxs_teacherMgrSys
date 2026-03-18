@@ -10,12 +10,18 @@
     <height>500</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>配置管理</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTreeWidget" name="treeWidget">
+    <widget class="QTreeView" name="treeView">
      <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
@@ -28,30 +34,12 @@
      <property name="headerHidden">
       <bool>false</bool>
      </property>
-     <column>
-      <property name="text">
-       <string notr="true">配置项</string>
-      </property>
-      <property name="width">
-       <number>180</number>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">值</string>
-      </property>
-      <property name="width">
-       <number>150</number>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string notr="true">描述</string>
-      </property>
-      <property name="width">
-       <number>250</number>
-      </property>
-     </column>
+     <attribute name="headerHighlightSections">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="headerStretchLastSection">
+      <bool>false</bool>
+     </attribute>
     </widget>
    </item>
    <item>
@@ -67,6 +55,13 @@
       <widget class="QPushButton" name="btnAddConfig">
        <property name="text">
         <string notr="true">添加配置</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnDelete">
+       <property name="text">
+        <string notr="true">删除</string>
        </property>
       </widget>
      </item>
@@ -90,20 +85,19 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btnSave">
+       <property name="text">
+        <string notr="true">保存</string>
+       </property>
+      </widget>
+     </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Save|QDialogButtonBox::Cancel</set>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources/>
+ <slots>
+  <slot>onSaveConfig()</slot>
+ </slots>
 </ui>

@@ -3,11 +3,14 @@
 
 #include "../../common/interfaces/IConfigManager.h"
 #include <QWidget>
-#include <QTreeWidgetItem>
+#include <QTreeView>
+#include <QStandardItemModel>
 
 namespace Ui {
 class ConfigWidget;
 }
+
+class ConfigModel;
 
 class ConfigWidget : public QWidget
 {
@@ -24,13 +27,14 @@ private slots:
     void onReloadConfig();
     void onAddGroup();
     void onAddConfig();
-    void onTreeItemChanged(QTreeWidgetItem *item, int column);
+    void onDeleteConfig();
 
 private:
     void initUI();
-    void loadConfigToUI();
 
     Ui::ConfigWidget *ui;
+    QTreeView *m_treeView;
+    ConfigModel *m_model;
     IConfigManager *m_configManager;
 };
 
