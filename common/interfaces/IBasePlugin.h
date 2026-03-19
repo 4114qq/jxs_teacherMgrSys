@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file IBasePlugin.h
  * @brief 插件基础接口定义
  * @details 定义所有插件必须实现的接口，包括生命周期管理、依赖注入和核心服务获取
@@ -13,6 +13,7 @@
 #include "ILogManager.h"
 #include "IAuthManager.h"
 #include "IHttpClientManager.h"
+#include "IThemeManager.h"
 
 /**
  * @class IBasePlugin
@@ -121,6 +122,12 @@ public:
      * @return IConfigManager* 配置管理器指针
      */
     virtual IConfigManager *configManager() const = 0;
+
+    /**
+     * @brief 获取主题管理器
+     * @return IThemeManager* 主题管理器指针
+     */
+    virtual IThemeManager *themeManager() const = 0;
 
     // ===== 插件生命周期管理 =====
 

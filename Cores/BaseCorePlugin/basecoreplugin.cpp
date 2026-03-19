@@ -13,7 +13,8 @@ BaseCorePlugin::BaseCorePlugin(QObject *parent)
     m_logManager(new LogManager(this)),
     m_configManager(new ConfigManager(this)),
     m_authManager(new AuthManager(this)),
-    m_httpClientManager(new HttpClientManager(this))
+    m_httpClientManager(new HttpClientManager(this)),
+    m_themeManager(new ThemeManager(this))
 {
 }
 
@@ -95,6 +96,11 @@ IHttpClientManager *BaseCorePlugin::httpClientManager() const
     return m_httpClientManager;
 }
 
+IThemeManager *BaseCorePlugin::themeManager() const
+{
+    return m_themeManager;
+}
+
 // ===== 插件生命周期管理 =====
 
 bool BaseCorePlugin::initialize()
@@ -103,6 +109,11 @@ bool BaseCorePlugin::initialize()
         m_configManager->setLogManager(m_logManager);
         m_configManager->load();
     }
+
+    if (m_themeManager) {
+        m_themeManager->initialize(m_configManager, m_eventManager);
+    }
+
     return true;
 }
 

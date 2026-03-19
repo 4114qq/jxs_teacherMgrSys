@@ -1,0 +1,7 @@
+{
+  "name": "ThemeUIPlugin",
+  "version": "1.0.0",
+  "description": "主题管理界面插件",
+  "author": "Your Name",
+  "dependencies": ["BaseCorePlugin"]
+}

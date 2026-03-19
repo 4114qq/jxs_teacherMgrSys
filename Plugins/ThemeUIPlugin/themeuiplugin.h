@@ -1,27 +1,21 @@
-#ifndef LOGUIPLUGIN_H
-#define LOGUIPLUGIN_H
+﻿#ifndef THEMUIPLUGIN_H
+#define THEMUIPLUGIN_H
 
-#include <QObject>
-#include <QVariantMap>
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
-#include "../../common/interfaces/ILogManager.h"
-#include "../../common/interfaces/IAuthManager.h"
-#include "../../common/interfaces/IHttpClientManager.h"
 #include "../../common/interfaces/IThemeManager.h"
-#include "../../common/interfaces/IConfigManager.h"
 
-class LogWidget;
+class ThemeWidget;
 
-class LogUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
+class ThemeUIPlugin : public QObject, public IBasePlugin, public IPluginWidget
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "com.example.LogUIPlugin" FILE "loguiplugin.json")
+    Q_PLUGIN_METADATA(IID "com.example.ThemeUIPlugin" FILE "themeuiplugin.json")
     Q_INTERFACES(IBasePlugin IPluginWidget)
 
 public:
-    LogUIPlugin(QObject *parent = nullptr);
-    ~LogUIPlugin() override;
+    ThemeUIPlugin(QObject *parent = nullptr);
+    ~ThemeUIPlugin() override;
 
     QString name() const override;
     QString version() const override;
@@ -48,19 +42,9 @@ public:
     IBasePlugin *core() const override;
 
 private:
-    void applyPluginStyle();
-
-private slots:
-    void handleThemeChanged(const QVariantMap &data);
-
-private:
     IBasePlugin *m_core;
-    LogWidget *m_logWidget;
-    ILogManager *m_logManager;
-    IAuthManager *m_authManager;
-    IDatabaseManager *m_databaseManager;
-    IBaseEventBus *m_eventManager;
+    ThemeWidget *m_themeWidget;
     IThemeManager *m_themeManager;
 };
 
-#endif // LOGUIPLUGIN_H
+#endif // THEMUIPLUGIN_H

@@ -16,6 +16,7 @@
 #include "AuthManager.h"
 #include "HttpClientManager.h"
 #include "EventManager.h"
+#include "ThemeManager.h"
 
 /**
  * @class BaseCorePlugin
@@ -134,6 +135,12 @@ public:
      */
     IHttpClientManager *httpClientManager() const override;
 
+    /**
+     * @brief 获取主题管理器
+     * @return IThemeManager* 主题管理器指针
+     */
+    IThemeManager *themeManager() const override;
+
     // ===== 插件生命周期管理 =====
 
     /**
@@ -170,6 +177,7 @@ private:
     mutable ConfigManager *m_configManager;       ///< 配置管理器
     mutable AuthManager *m_authManager;           ///< 认证管理器
     mutable HttpClientManager *m_httpClientManager; ///< HTTP客户端管理器
+    mutable ThemeManager *m_themeManager;           ///< 主题管理器
 };
 
 #endif // BASECOREPLUGIN_H

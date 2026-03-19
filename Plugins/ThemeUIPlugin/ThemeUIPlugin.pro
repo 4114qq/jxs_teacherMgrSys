@@ -1,0 +1,41 @@
+QT       += core gui
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+TEMPLATE = lib
+DEFINES += THEMEUIPLUGIN_LIBRARY
+
+CONFIG += plugin c++17
+
+TARGET = $$qtLibraryTarget(ThemeUIPlugin)
+
+# You can make your code fail to compile if it uses deprecated APIs.
+# In order to do so, uncomment the following line.
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+SOURCES += \
+    themeuiplugin.cpp \
+    themewidget.cpp
+
+HEADERS += \
+    themeuiplugin.h \
+    themewidget.h
+
+FORMS += \
+    themewidget.ui
+
+# Include common directory
+INCLUDEPATH += $$PWD/../../common
+
+# Include BaseCorePlugin directory
+INCLUDEPATH += $$PWD/../../Cores/BaseCorePlugin
+
+# Default rules for deployment.
+unix {
+    target.path = /usr/lib
+}
+else: win32: target.path = $$PWD/../../bin/x86_64/plugins
+!isEmpty(target.path): INSTALLS += target
+
+# Set output directory
+DESTDIR = $$PWD/../../bin/x86_64/plugins

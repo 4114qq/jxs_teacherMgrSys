@@ -1,0 +1,30 @@
+/* LogUIPlugin 特定样式 */
+
+#LogWidget QTextEdit {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "Consolas";
+    font-size: 9pt;
+    border: 1px solid #3a3a3a;
+}
+
+#LogWidget QPushButton {
+    background-color: #0e639c;
+    color: #ffffff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 3px;
+    min-width: 70px;
+}
+
+#LogWidget QPushButton:hover {
+    background-color: #1177bb;
+}
+
+#LogWidget QPushButton:pressed {
+    background-color: #0d5a8f;
+}
+
+#LogWidget QLabel {
+    color: #e0e0e0;
+}

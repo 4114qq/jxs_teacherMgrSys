@@ -120,13 +120,49 @@ void LogUIPlugin::setCore(IBasePlugin *core)
 
     if (m_core) {
         m_logManager = m_core->logManager();
+        m_themeManager = m_core->themeManager();
+        IBaseEventBus *eventBus = m_core->eventManager();
+
         if (m_logWidget && m_logManager) {
             m_logWidget->setLogManager(m_logManager);
         }
+
+        if (m_themeManager && eventBus) {
+            IBaseEventBus::Subscription sub;
+            sub.receiver = this;
+            sub.slot = "handleThemeChanged";
+            eventBus->subscribe("theme.changed", sub);
+            applyPluginStyle();
+        }
     }
+}
+
+void LogUIPlugin::handleThemeChanged(const QVariantMap &data)
+{
+    QString themeName = data["theme"].toString();
+    Q_UNUSED(themeName);
+    applyPluginStyle();
+}
+
+void LogUIPlugin::applyPluginStyle()
+{
+    if (!m_themeManager || !m_logWidget) {
+        return;
+    }
+
+    QString pluginStyle = m_themeManager->loadFile("themes/plugins/logui.qss");
+    m_logWidget->setStyleSheet(pluginStyle);
 }
 
 IBasePlugin *LogUIPlugin::core() const
 {
     return m_core;
+}
+
+IThemeManager *LogUIPlugin::themeManager() const
+{
+    if (m_core) {
+        return m_core->themeManager();
+    }
+    return nullptr;
 }
