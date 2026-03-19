@@ -8,7 +8,8 @@
     "UserAuthUIPlugin",
     "HttpDataUIPlugin",
     "VideoUIPlugin",
-    "ThemeUIPlugin"
+    "ThemeUIPlugin",
+    "CourseVisualPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
@@ -18,6 +19,7 @@
     "UserAuthUIPlugin": ["BaseCorePlugin"],
     "HttpDataUIPlugin": ["BaseCorePlugin"],
     "VideoUIPlugin": ["BaseCorePlugin"],
-    "ThemeUIPlugin": ["BaseCorePlugin"]
+    "ThemeUIPlugin": ["BaseCorePlugin"],
+    "CourseVisualPlugin": ["BaseCorePlugin"]
   }
 }

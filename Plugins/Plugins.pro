@@ -6,4 +6,5 @@ SUBDIRS += ConfigUIPlugin \
             UserAuthUIPlugin \
             HttpDataUIPlugin \
             VideoUIPlugin \
-            ThemeUIPlugin
+            ThemeUIPlugin \
+            CourseVisualPlugin

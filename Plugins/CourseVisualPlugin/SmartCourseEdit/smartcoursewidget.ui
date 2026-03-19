@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SmartCourseWidget</class>
+ <widget class="QWidget" name="SmartCourseWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>智能识别课程</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="largeStepLabel">
+     <property name="text">
+      <string>大步骤</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="LargeStepListView" name="largeStepListView">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="dragEnabled">
+      <bool>true</bool>
+     </property>
+     <property name="acceptDrops">
+      <bool>true</bool>
+     </property>
+     <property name="dropIndicatorShown">
+      <bool>true</bool>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::InternalMove</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="smallStepLabel">
+     <property name="text">
+      <string>小步骤</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="SmallStepListView" name="smallStepListView">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="dragEnabled">
+      <bool>true</bool>
+     </property>
+     <property name="acceptDrops">
+      <bool>true</bool>
+     </property>
+     <property name="dropIndicatorShown">
+      <bool>true</bool>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::InternalMove</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LargeStepListView</class>
+   <extends>QListView</extends>
+   <header>LargeStep/largesteplistview.h</header>
+   <container>0</container>
+  </customwidget>
+  <customwidget>
+   <class>SmallStepListView</class>
+   <extends>QListView</extends>
+   <header>SmallStep/smallsteplistview.h</header>
+   <container>0</container>
+  </customwidget>
+ </customwidgets>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>

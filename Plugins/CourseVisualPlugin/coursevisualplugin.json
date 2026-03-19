@@ -1,0 +1,7 @@
+{
+  "name": "CourseVisualPlugin",
+  "version": "1.0.0",
+  "description": "课程可视化编辑插件",
+  "author": "Your Name",
+  "dependencies": ["BaseCorePlugin"]
+}
