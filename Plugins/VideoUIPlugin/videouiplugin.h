@@ -1,8 +1,9 @@
-﻿#ifndef VIDEOUIPLUGIN_H
+#ifndef VIDEOUIPLUGIN_H
 #define VIDEOUIPLUGIN_H
 
 #include "../../common/interfaces/IBasePlugin.h"
 #include "../../common/interfaces/IPluginWidget.h"
+#include "../../common/interfaces/IThemeManager.h"
 
 class VideoWidget;
 
@@ -35,6 +36,7 @@ public:
     ILogManager *logManager() const override;
     IAuthManager *authManager() const override;
     IHttpClientManager *httpClientManager() const override;
+    IThemeManager *themeManager() const override;
 
     QWidget *widget() const override;
     QString widgetTitle() const override;
@@ -43,6 +45,7 @@ public:
 private:
     IBasePlugin *m_core;
     VideoWidget *m_widget;
+    IThemeManager *m_themeManager;
 };
 
 #endif // VIDEOUIPLUGIN_H

@@ -135,10 +135,16 @@ void ConfigUIPlugin::setCore(IBasePlugin *core)
 
     if (m_core) {
         m_configManager = m_core->configManager();
+        m_themeManager = m_core->themeManager();
         if (m_configWidget && m_configManager) {
             m_configWidget->setConfigManager(m_configManager);
         }
     }
+}
+
+IThemeManager *ConfigUIPlugin::themeManager() const
+{
+    return m_themeManager;
 }
 
 IBasePlugin *ConfigUIPlugin::core() const

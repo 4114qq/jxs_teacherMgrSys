@@ -164,3 +164,11 @@ IBasePlugin *HttpDataUIPlugin::core() const
 {
     return m_core;
 }
+
+IThemeManager *HttpDataUIPlugin::themeManager() const
+{
+    if (m_core) {
+        return m_core->themeManager();
+    }
+    return nullptr;
+}

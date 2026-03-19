@@ -7,7 +7,8 @@
     "EventUIPlugin",
     "UserAuthUIPlugin",
     "HttpDataUIPlugin",
-    "VideoUIPlugin"
+    "VideoUIPlugin",
+    "ThemeUIPlugin"
   ],
   "dependencies": {
     "ConfigUIPlugin": ["BaseCorePlugin"],
@@ -16,6 +17,7 @@
     "EventUIPlugin": ["BaseCorePlugin"],
     "UserAuthUIPlugin": ["BaseCorePlugin"],
     "HttpDataUIPlugin": ["BaseCorePlugin"],
-    "VideoUIPlugin": ["BaseCorePlugin"]
+    "VideoUIPlugin": ["BaseCorePlugin"],
+    "ThemeUIPlugin": ["BaseCorePlugin"]
   }
 }

@@ -1,4 +1,4 @@
-﻿#include "videouiplugin.h"
+#include "videouiplugin.h"
 #include "videowidget.h"
 
 #include <QIcon>
@@ -56,6 +56,14 @@ bool VideoUIPlugin::initialize()
 void VideoUIPlugin::setCore(IBasePlugin *core)
 {
     m_core = core;
+}
+
+IThemeManager *VideoUIPlugin::themeManager() const
+{
+    if (m_core) {
+        return m_core->themeManager();
+    }
+    return nullptr;
 }
 
 bool VideoUIPlugin::startPlugin()

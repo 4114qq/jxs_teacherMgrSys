@@ -1,4 +1,4 @@
-#ifndef LOGWIDGET_H
+﻿#ifndef LOGWIDGET_H
 #define LOGWIDGET_H
 
 #include <QWidget>

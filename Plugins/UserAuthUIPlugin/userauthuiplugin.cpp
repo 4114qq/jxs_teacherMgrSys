@@ -158,4 +158,12 @@ IBasePlugin *UserAuthUIPlugin::core() const
     return m_core;
 }
 
+IThemeManager *UserAuthUIPlugin::themeManager() const
+{
+    if (m_core) {
+        return m_core->themeManager();
+    }
+    return nullptr;
+}
+
 

@@ -139,3 +139,11 @@ IBasePlugin *EventUIPlugin::core() const
 {
     return m_core;
 }
+
+IThemeManager *EventUIPlugin::themeManager() const
+{
+    if (m_core) {
+        return m_core->themeManager();
+    }
+    return nullptr;
+}

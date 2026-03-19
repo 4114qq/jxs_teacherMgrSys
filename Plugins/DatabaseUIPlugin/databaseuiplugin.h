@@ -7,6 +7,7 @@
 #include "../../common/interfaces/IPluginWidget.h"
 #include "../../common/interfaces/IAuthManager.h"
 #include "../../common/interfaces/IHttpClientManager.h"
+#include "../../common/interfaces/IThemeManager.h"
 
 class DatabaseWidget;
 
@@ -33,6 +34,7 @@ public:
     IAuthManager *authManager() const override;
     IHttpClientManager *httpClientManager() const override;
     IConfigManager *configManager() const override;
+    IThemeManager *themeManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
 

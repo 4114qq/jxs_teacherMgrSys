@@ -8,6 +8,7 @@
 #include "../../common/interfaces/IAuthManager.h"
 #include "../../common/interfaces/ILogManager.h"
 #include "../../common/interfaces/IHttpClientManager.h"
+#include "../../common/interfaces/IThemeManager.h"
 
 class UserAuthWidget;
 
@@ -34,6 +35,7 @@ public:
     IConfigManager *configManager() const override;
     IAuthManager *authManager() const override;
     IHttpClientManager *httpClientManager() const override;
+    IThemeManager *themeManager() const override;
     QStringList dependencies() const override;
     QString author() const override;
 

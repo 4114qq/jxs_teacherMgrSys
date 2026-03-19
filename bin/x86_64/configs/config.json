@@ -56,5 +56,9 @@
         "Server_IP_note": "服务器IP地址",
         "Server_Port": 8080,
         "Server_Port_note": "服务器端口号"
+    },
+    "Theme": {
+        "Theme": "light",
+        "Theme_note": "主题(light/dark/blue)"
     }
 }

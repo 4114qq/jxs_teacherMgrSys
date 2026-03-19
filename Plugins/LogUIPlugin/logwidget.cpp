@@ -14,6 +14,7 @@ LogWidget::LogWidget(QWidget *parent)
     , m_refreshTimer(new QTimer(this))
 {
     ui->setupUi(this);
+    setObjectName("LogWidget");
 
     connect(ui->btnClear, &QPushButton::clicked, this, &LogWidget::onClearLogs);
     connect(ui->btnExport, &QPushButton::clicked, this, &LogWidget::onExportLogs);

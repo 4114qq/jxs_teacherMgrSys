@@ -20,6 +20,7 @@ SOURCES += \
     EventManager.cpp \
     HttpClientManager.cpp \
     LogManager.cpp \
+    ThemeManager.cpp \
     basecoreplugin.cpp
 
 HEADERS += \
@@ -30,6 +31,7 @@ HEADERS += \
     EventManager.h \
     HttpClientManager.h \
     LogManager.h \
+    ThemeManager.h \
     basecoreplugin.h
 
 # Include common directory
