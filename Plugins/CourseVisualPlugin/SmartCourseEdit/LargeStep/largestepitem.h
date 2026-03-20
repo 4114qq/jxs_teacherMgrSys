@@ -18,6 +18,7 @@ struct LargeStepItem {
     QString name;
     int order;
     bool isAddItem;
+    bool isArrow;
     QList<SmallStepItem> smallSteps;
 };
 

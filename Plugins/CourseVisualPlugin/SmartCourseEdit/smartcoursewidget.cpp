@@ -114,8 +114,9 @@ void SmartCourseWidget::onLargeContextMenuRequested(const QPoint &pos)
 {
     QModelIndex index = ui->largeStepListView->indexAt(pos);
 
-    if (index.isValid() && !m_largeStepModel->isAddItem(index.row())) {
-        m_largeStepModel->setSelectedIndex(index.row());
+    if (index.isValid() && !m_largeStepModel->isAddItem(index.row()) && !m_largeStepModel->isArrow(index.row())) {
+        int stepIndex = index.row() / 2;
+        m_largeStepModel->setSelectedIndex(stepIndex);
         m_largeItemMenu->exec(ui->largeStepListView->mapToGlobal(pos));
     } else if (!index.isValid()) {
         m_largeEmptyMenu->exec(ui->largeStepListView->mapToGlobal(pos));
@@ -141,10 +142,11 @@ void SmartCourseWidget::onInsertLargeStepBefore()
     int currentRow = ui->largeStepListView->currentIndex().row();
     if (currentRow < 0) return;
 
+    int stepIndex = currentRow / 2;
     bool ok;
     QString name = QInputDialog::getText(this, QString::fromLocal8Bit("添加步骤"), QString::fromLocal8Bit("步骤名称:"), QLineEdit::Normal, QString::fromLocal8Bit("新步骤"), &ok);
     if (ok && !name.isEmpty()) {
-        m_largeStepModel->insertStep(currentRow, name);
+        m_largeStepModel->insertStep(stepIndex, name);
     }
 }
 
@@ -153,29 +155,37 @@ void SmartCourseWidget::onInsertLargeStepAfter()
     int currentRow = ui->largeStepListView->currentIndex().row();
     if (currentRow < 0) return;
 
+    int stepIndex = currentRow / 2;
     bool ok;
     QString name = QInputDialog::getText(this, QString::fromLocal8Bit("添加步骤"), QString::fromLocal8Bit("步骤名称:"), QLineEdit::Normal, QString::fromLocal8Bit("新步骤"), &ok);
     if (ok && !name.isEmpty()) {
-        m_largeStepModel->insertStep(currentRow + 1, name);
+        m_largeStepModel->insertStep(stepIndex + 1, name);
     }
 }
 
 void SmartCourseWidget::onMoveLargeStepUp()
 {
     int currentRow = ui->largeStepListView->currentIndex().row();
-    if (currentRow <= 0) return;
+    if (currentRow < 0) return;
 
-    m_largeStepModel->moveStep(currentRow, currentRow - 1);
-    ui->largeStepListView->setCurrentIndex(m_largeStepModel->index(currentRow - 1, 0));
+    int stepIndex = currentRow / 2;
+    if (stepIndex <= 0) return;
+
+    m_largeStepModel->moveStep(stepIndex, stepIndex - 1);
+    ui->largeStepListView->setCurrentIndex(m_largeStepModel->index((stepIndex - 1) * 2, 0));
 }
 
 void SmartCourseWidget::onMoveLargeStepDown()
 {
     int currentRow = ui->largeStepListView->currentIndex().row();
-    if (currentRow < 0 || currentRow >= m_largeStepModel->rowCount() - 1) return;
+    if (currentRow < 0) return;
 
-    m_largeStepModel->moveStep(currentRow, currentRow + 1);
-    ui->largeStepListView->setCurrentIndex(m_largeStepModel->index(currentRow + 1, 0));
+    int stepIndex = currentRow / 2;
+    int stepCount = m_largeStepModel->rowCount() / 2;
+    if (stepIndex >= stepCount - 1) return;
+
+    m_largeStepModel->moveStep(stepIndex, stepIndex + 1);
+    ui->largeStepListView->setCurrentIndex(m_largeStepModel->index((stepIndex + 1) * 2, 0));
 }
 
 void SmartCourseWidget::onRenameLargeStep()
@@ -189,15 +199,16 @@ void SmartCourseWidget::onRenameLargeStep()
 void SmartCourseWidget::onDeleteLargeStep()
 {
     int currentRow = ui->largeStepListView->currentIndex().row();
-    if (currentRow < 0 || m_largeStepModel->isAddItem(currentRow)) return;
+    if (currentRow < 0 || m_largeStepModel->isAddItem(currentRow) || m_largeStepModel->isArrow(currentRow)) return;
 
-    int oldIndex = m_smallStepModel->largeStepIndex();
-    m_largeStepModel->removeStep(currentRow);
+    int stepIndex = currentRow / 2;
+    int oldSmallStepIndex = m_smallStepModel->largeStepIndex();
+    m_largeStepModel->removeStep(stepIndex);
 
-    if (oldIndex == currentRow) {
+    if (oldSmallStepIndex == stepIndex) {
         m_smallStepModel->setLargeStepIndex(-1);
-    } else if (oldIndex > currentRow && oldIndex > 0) {
-        m_smallStepModel->setLargeStepIndex(oldIndex - 1);
+    } else if (oldSmallStepIndex > stepIndex && oldSmallStepIndex > 0) {
+        m_smallStepModel->setLargeStepIndex(oldSmallStepIndex - 1);
     }
 }
 
@@ -220,13 +231,10 @@ void SmartCourseWidget::onLargeStepSelectionChanged(int index)
 
 void SmartCourseWidget::onAddLargeItemPressed(int index)
 {
-    int stepCount = m_largeStepModel->rowCount() - 1;
+    Q_UNUSED(index)
+    int stepCount = m_largeStepModel->rowCount() / 2;
     QString defaultName = QString::fromLocal8Bit("大步骤%1").arg(stepCount + 1);
-    m_largeStepModel->insertStep(index, defaultName);
-
-    QModelIndex newIndex = m_largeStepModel->index(index, 0);
-    ui->largeStepListView->setCurrentIndex(newIndex);
-    ui->largeStepListView->edit(newIndex);
+    m_largeStepModel->insertStep(stepCount, defaultName);
 }
 
 void SmartCourseWidget::onAddLargeItemClicked(const QModelIndex &index)
@@ -383,11 +391,9 @@ void SmartCourseWidget::onSmallStepSelectionChanged(int index)
 QStringList SmartCourseWidget::getLargeSteps() const
 {
     QStringList steps;
-    int count = m_largeStepModel->rowCount();
-    for (int i = 0; i < count; ++i) {
-        if (!m_largeStepModel->isAddItem(i)) {
-            steps.append(m_largeStepModel->stepAt(i).name);
-        }
+    int stepCount = m_largeStepModel->rowCount() / 2;
+    for (int i = 0; i < stepCount; ++i) {
+        steps.append(m_largeStepModel->stepAt(i).name);
     }
     return steps;
 }

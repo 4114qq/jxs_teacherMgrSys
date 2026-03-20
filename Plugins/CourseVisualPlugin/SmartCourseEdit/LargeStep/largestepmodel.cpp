@@ -16,7 +16,12 @@ int LargeStepModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return m_steps.size() + 1;
+    int stepCount = m_steps.size();
+    if (stepCount == 0)
+        return 1;
+    if (stepCount == 1)
+        return 2;
+    return stepCount * 2;
 }
 
 QVariant LargeStepModel::data(const QModelIndex &index, int role) const
@@ -27,7 +32,7 @@ QVariant LargeStepModel::data(const QModelIndex &index, int role) const
     int row = index.row();
     int stepCount = m_steps.size();
 
-    if (row == stepCount) {
+    if (isAddItem(row)) {
         if (role == Qt::DisplayRole || role == Qt::EditRole)
             return QString::fromLocal8Bit("点击添加步骤");
         if (role == Qt::UserRole + 2)
@@ -35,10 +40,21 @@ QVariant LargeStepModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    if (row > stepCount)
+    if (isArrow(row)) {
+        return QVariant();
+    }
+
+    int stepIndex;
+    if (stepCount <= 1) {
+        stepIndex = row;
+    } else {
+        stepIndex = row / 2;
+    }
+
+    if (stepIndex >= stepCount)
         return QVariant();
 
-    const LargeStepItem &step = m_steps.at(row);
+    const LargeStepItem &step = m_steps.at(stepIndex);
 
     switch (role) {
     case Qt::DisplayRole:
@@ -62,8 +78,9 @@ bool LargeStepModel::setData(const QModelIndex &index, const QVariant &value, in
 
     int row = index.row();
     int stepCount = m_steps.size();
+    int addItemRow = stepCount * 2;
 
-    if (row == stepCount) {
+    if (row == addItemRow) {
         if (role == Qt::EditRole) {
             QString name = value.toString();
             if (!name.isEmpty()) {
@@ -74,11 +91,19 @@ bool LargeStepModel::setData(const QModelIndex &index, const QVariant &value, in
         return false;
     }
 
-    if (row > stepCount)
+    if (row > addItemRow)
+        return false;
+
+    bool isArrowItem = (row % 2 == 1);
+    if (isArrowItem)
+        return false;
+
+    int stepIndex = row / 2;
+    if (stepIndex >= stepCount)
         return false;
 
     if (role == Qt::EditRole) {
-        m_steps[row].name = value.toString();
+        m_steps[stepIndex].name = value.toString();
         emit dataChanged(index, index);
         emit stepsChanged();
         return true;
@@ -93,8 +118,13 @@ Qt::ItemFlags LargeStepModel::flags(const QModelIndex &index) const
         return Qt::ItemIsDropEnabled;
 
     int row = index.row();
-    if (row >= m_steps.size()) {
+
+    if (isAddItem(row)) {
         return Qt::ItemIsEnabled | Qt::ItemIsEditable;
+    }
+
+    if (isArrow(row)) {
+        return Qt::NoItemFlags;
     }
 
     return QAbstractItemModel::flags(index) |
@@ -105,12 +135,30 @@ Qt::ItemFlags LargeStepModel::flags(const QModelIndex &index) const
 
 bool LargeStepModel::isAddItem(int index) const
 {
-    return index == m_steps.size();
+    int stepCount = m_steps.size();
+    if (stepCount == 0)
+        return index == 0;
+    if (stepCount == 1)
+        return index == 1;
+    return index == stepCount * 2 - 1;
+}
+
+bool LargeStepModel::isArrow(int index) const
+{
+    int stepCount = m_steps.size();
+    if (stepCount <= 1)
+        return false;
+    return index % 2 == 1 && index < stepCount * 2 - 2;
 }
 
 int LargeStepModel::addItemIndex() const
 {
-    return m_steps.size();
+    int stepCount = m_steps.size();
+    if (stepCount == 0)
+        return 0;
+    if (stepCount == 1)
+        return 1;
+    return stepCount * 2 - 1;
 }
 
 Qt::DropActions LargeStepModel::supportedDropActions() const
@@ -125,28 +173,36 @@ bool LargeStepModel::moveRows(const QModelIndex &sourceParent, int sourceRow, in
         return false;
 
     int stepCount = m_steps.size();
-
-    if (sourceRow >= stepCount || destinationChild > stepCount)
+    if (stepCount <= 1)
         return false;
 
-    if (sourceRow == destinationChild)
+    if (isAddItem(sourceRow) || isAddItem(destinationChild))
+        return false;
+
+    if (destinationChild < 0)
+        destinationChild = 0;
+    else if (destinationChild >= rowCount())
+        destinationChild = rowCount() - 1;
+
+    if (isArrow(sourceRow))
+        return false;
+
+    int sourceStepIndex = sourceRow / 2;
+    int destStepIndex = destinationChild / 2;
+
+    if (sourceStepIndex >= stepCount || destStepIndex > stepCount)
+        return false;
+
+    if (sourceStepIndex == destStepIndex)
         return true;
 
-    int destRow = destinationChild;
-    if (destinationChild > sourceRow) {
-        destRow = destinationChild - 1;
-    }
-
-    if (destRow >= stepCount)
-        destRow = stepCount - 1;
-
-    if (sourceRow == destRow)
-        return true;
+    if (destStepIndex > sourceStepIndex)
+        destStepIndex--;
 
     m_isMoving = true;
     beginResetModel();
 
-    m_steps.move(sourceRow, destRow);
+    m_steps.move(sourceStepIndex, destStepIndex);
 
     for (int i = 0; i < m_steps.size(); ++i) {
         m_steps[i].order = i + 1;
@@ -160,12 +216,14 @@ bool LargeStepModel::moveRows(const QModelIndex &sourceParent, int sourceRow, in
 
 void LargeStepModel::addStep(const QString &name)
 {
-    beginInsertRows(QModelIndex(), m_steps.size(), m_steps.size());
+    int insertPos = m_steps.size();
+    beginInsertRows(QModelIndex(), insertPos * 2, insertPos * 2);
 
     LargeStepItem item;
     item.id = QUuid::createUuid().toString();
     item.name = name;
     item.order = m_steps.size() + 1;
+    item.isArrow = false;
 
     m_steps.append(item);
     endInsertRows();
@@ -177,12 +235,13 @@ void LargeStepModel::insertStep(int index, const QString &name)
     if (index < 0 || index > m_steps.size())
         index = m_steps.size();
 
-    beginInsertRows(QModelIndex(), index, index);
+    beginInsertRows(QModelIndex(), index * 2, index * 2);
 
     LargeStepItem item;
     item.id = QUuid::createUuid().toString();
     item.name = name;
     item.order = index + 1;
+    item.isArrow = false;
 
     m_steps.insert(index, item);
 
@@ -199,7 +258,7 @@ void LargeStepModel::removeStep(int index)
     if (index < 0 || index >= m_steps.size())
         return;
 
-    beginRemoveRows(QModelIndex(), index, index);
+    beginRemoveRows(QModelIndex(), index * 2, index * 2);
     m_steps.removeAt(index);
     endRemoveRows();
 
@@ -238,13 +297,16 @@ void LargeStepModel::renameStep(int index, const QString &name)
         return;
 
     m_steps[index].name = name;
-    QModelIndex idx = createIndex(index, 0);
+    QModelIndex idx = createIndex(index * 2, 0);
     emit dataChanged(idx, idx);
     emit stepsChanged();
 }
 
 void LargeStepModel::clear()
 {
+    if (m_steps.isEmpty())
+        return;
+
     beginResetModel();
     m_steps.clear();
     m_selectedIndex = -1;
@@ -256,6 +318,7 @@ LargeStepItem LargeStepModel::stepAt(int index) const
 {
     if (index < 0 || index >= m_steps.size())
         return LargeStepItem();
+
     return m_steps.at(index);
 }
 
@@ -266,17 +329,14 @@ bool LargeStepModel::isEmpty() const
 
 void LargeStepModel::setSelectedIndex(int index)
 {
-    if (index == m_selectedIndex)
-        return;
-
     int oldIndex = m_selectedIndex;
     m_selectedIndex = index;
 
     if (oldIndex >= 0 && oldIndex < m_steps.size()) {
-        emit dataChanged(createIndex(oldIndex, 0), createIndex(oldIndex, 0));
+        emit dataChanged(createIndex(oldIndex * 2, 0), createIndex(oldIndex * 2, 0));
     }
     if (m_selectedIndex >= 0 && m_selectedIndex < m_steps.size()) {
-        emit dataChanged(createIndex(m_selectedIndex, 0), createIndex(m_selectedIndex, 0));
+        emit dataChanged(createIndex(m_selectedIndex * 2, 0), createIndex(m_selectedIndex * 2, 0));
     }
 }
 
@@ -291,9 +351,11 @@ SmallStepItem LargeStepModel::smallStepAt(int largeStepIndex, int smallStepIndex
 {
     if (largeStepIndex < 0 || largeStepIndex >= m_steps.size())
         return SmallStepItem();
+
     const QList<SmallStepItem> &smallSteps = m_steps.at(largeStepIndex).smallSteps;
     if (smallStepIndex < 0 || smallStepIndex >= smallSteps.size())
         return SmallStepItem();
+
     return smallSteps.at(smallStepIndex);
 }
 
@@ -307,8 +369,9 @@ void LargeStepModel::addSmallStep(int largeStepIndex, const QString &name)
     item.id = QUuid::createUuid().toString();
     item.name = name;
     item.order = smallSteps.size() + 1;
-    smallSteps.append(item);
+    item.isAddItem = false;
 
+    smallSteps.append(item);
     emit smallStepsChanged(largeStepIndex);
 }
 
@@ -325,8 +388,10 @@ void LargeStepModel::insertSmallStep(int largeStepIndex, int smallStepIndex, con
     item.id = QUuid::createUuid().toString();
     item.name = name;
     item.order = smallStepIndex + 1;
+    item.isAddItem = false;
 
     smallSteps.insert(smallStepIndex, item);
+
     for (int i = smallStepIndex + 1; i < smallSteps.size(); ++i) {
         smallSteps[i].order = i + 1;
     }
@@ -344,6 +409,7 @@ void LargeStepModel::removeSmallStep(int largeStepIndex, int smallStepIndex)
         return;
 
     smallSteps.removeAt(smallStepIndex);
+
     for (int i = smallStepIndex; i < smallSteps.size(); ++i) {
         smallSteps[i].order = i + 1;
     }
@@ -357,16 +423,17 @@ void LargeStepModel::moveSmallStep(int largeStepIndex, int from, int to)
         return;
 
     QList<SmallStepItem> &smallSteps = m_steps[largeStepIndex].smallSteps;
-    if (from < 0 || from >= smallSteps.size() ||
-        to < 0 || to >= smallSteps.size() ||
-        from == to)
+    if (from < 0 || from >= smallSteps.size() || to < 0 || to >= smallSteps.size() || from == to)
         return;
 
+    beginResetModel();
     smallSteps.move(from, to);
+
     for (int i = 0; i < smallSteps.size(); ++i) {
         smallSteps[i].order = i + 1;
     }
 
+    endResetModel();
     emit smallStepsChanged(largeStepIndex);
 }
 

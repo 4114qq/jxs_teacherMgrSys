@@ -36,23 +36,25 @@ void LargeStepDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->save();
 
     int row = index.row();
+
+    if (m_model && m_model->isArrow(row)) {
+        QRect arrowRect = option.rect.adjusted(5, 5, -5, -5);
+        drawArrow(painter, arrowRect);
+        painter->restore();
+        return;
+    }
+
     bool isAddItem = m_model && m_model->isAddItem(row);
-    bool isSelected = !isAddItem && m_model && (row == m_model->selectedIndex());
+    bool isSelected = !isAddItem && m_model && ((row / 2) == m_model->selectedIndex());
 
     if (!isIndexEditing(index)) {
         if (isAddItem) {
             QRect itemRect = option.rect.adjusted(5, 5, -5, -5);
             drawAddItem(painter, itemRect);
         } else {
-            int stepCount = m_model ? m_model->rowCount() - 1 : index.model()->rowCount() - 1;
-            QRect itemRect = option.rect.adjusted(5, 5, -25, -5);
+            QRect itemRect = option.rect.adjusted(5, 5, -5, -5);
             QString name = index.data(Qt::DisplayRole).toString();
             drawStepItem(painter, itemRect, name, isSelected);
-
-            if (row < stepCount - 1) {
-                QRect arrowRect = option.rect.adjusted(180, 5, -5, -5);
-                drawArrow(painter, arrowRect);
-            }
         }
     }
 
@@ -62,13 +64,26 @@ void LargeStepDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 QSize LargeStepDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option)
-    Q_UNUSED(index)
-    return QSize(200, 50);
+
+    if (m_model) {
+        int row = index.row();
+        if (m_model->isArrow(row)) {
+            return QSize(30, 20);
+        }
+        if (m_model->isAddItem(row)) {
+            return QSize(150, 20);
+        }
+    }
+
+    return QSize(150, 20);
 }
 
 QWidget *LargeStepDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option)
+
+    if (m_model && m_model->isArrow(index.row()))
+        return nullptr;
 
     m_isEditing = true;
     m_editingIndex = index;

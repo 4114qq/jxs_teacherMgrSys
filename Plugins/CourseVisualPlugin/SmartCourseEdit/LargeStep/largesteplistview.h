@@ -24,9 +24,13 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+    QModelIndex moveCursor(CursorAction cursor, Qt::KeyboardModifiers modifiers) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 
 private:
     LargeStepModel *m_model;
+    int findTargetStepIndex(const QPoint &pos);
 };
 
 #endif

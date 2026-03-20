@@ -30,6 +30,7 @@ public:
     LargeStepItem stepAt(int index) const;
     bool isEmpty() const;
     bool isAddItem(int index) const;
+    bool isArrow(int index) const;
     int addItemIndex() const;
 
     int selectedIndex() const { return m_selectedIndex; }
